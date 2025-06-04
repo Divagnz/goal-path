@@ -3,7 +3,7 @@ Additional SQLAlchemy models for GoalPath - Part 2
 Reminders, Issues, Comments, Context, and other supporting entities
 """
 
-from sqlalchemy import Column, String, Text, DateTime, Integer, BigInteger, ForeignKey, CheckConstraint, UniqueConstraint
+from sqlalchemy import Column, String, Text, DateTime, Integer, BigInteger, ForeignKey, CheckConstraint, UniqueConstraint, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from . import Base, generate_uuid
@@ -73,7 +73,7 @@ class TaskComment(Base):
     author = Column(String(100), nullable=False)
     content = Column(Text, nullable=False)
     comment_type = Column(String(20), nullable=False, default="comment")
-    metadata = Column(Text)  # JSON string for SQLite compatibility
+    comment_metadata = Column(Text)  # JSON string for SQLite compatibility
     created_at = Column(DateTime, nullable=False, default=func.now())
     
     # Relationships

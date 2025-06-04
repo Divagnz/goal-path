@@ -3,7 +3,7 @@ SQLAlchemy models for GoalPath project management system
 Based on the approved database schema
 """
 
-from sqlalchemy import Column, String, Text, DateTime, Integer, Decimal, Date, ForeignKey, CheckConstraint, UniqueConstraint
+from sqlalchemy import Column, String, Text, DateTime, Integer, Date, ForeignKey, CheckConstraint, UniqueConstraint, Numeric
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -99,8 +99,8 @@ class Task(Base):
     status = Column(String(20), nullable=False, default=TaskStatus.BACKLOG)
     priority = Column(String(20), nullable=False, default=TaskPriority.MEDIUM)
     story_points = Column(Integer)
-    estimated_hours = Column(Decimal(7, 2))
-    actual_hours = Column(Decimal(7, 2))
+    estimated_hours = Column(Numeric(7, 2))
+    actual_hours = Column(Numeric(7, 2))
     start_date = Column(Date)
     due_date = Column(Date)
     completed_date = Column(DateTime)
@@ -163,7 +163,7 @@ class Goal(Base):
     goal_type = Column(String(20), nullable=False, default="short_term")
     target_date = Column(Date)
     status = Column(String(20), nullable=False, default="active")
-    progress_percentage = Column(Decimal(5, 2), nullable=False, default=0.00)
+    progress_percentage = Column(Numeric(5, 2), nullable=False, default=0.00)
     created_at = Column(DateTime, nullable=False, default=func.now())
     updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
     
@@ -185,7 +185,7 @@ class GoalProject(Base):
     
     goal_id = Column(String, ForeignKey("goals.id", ondelete="CASCADE"), primary_key=True)
     project_id = Column(String, ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True)
-    weight = Column(Decimal(3, 2), nullable=False, default=1.00)
+    weight = Column(Numeric(3, 2), nullable=False, default=1.00)
     
     # Relationships
     goal = relationship("Goal", back_populates="project_links")

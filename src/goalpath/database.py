@@ -10,7 +10,12 @@ from pathlib import Path
 from typing import Generator
 
 from .models import Base
-from .models.extended import *  # Import all extended models
+# Import specific models to avoid circular imports  
+from .models import Project, Task, Goal
+from .models.extended import (
+    Reminder, Issue, TaskComment, TaskAttachment, 
+    ProjectContext, ScheduleEvent
+)
 
 class DatabaseManager:
     """Database manager for GoalPath application"""

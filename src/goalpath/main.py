@@ -13,6 +13,7 @@ from pathlib import Path
 
 from .database import get_db, init_database
 from .models import Project, Task, Goal
+from .routers import projects_router, tasks_router, goals_router
 
 # Create FastAPI application
 app = FastAPI(
@@ -33,6 +34,11 @@ templates_dir.mkdir(exist_ok=True)
 
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 templates = Jinja2Templates(directory=templates_dir)
+
+# Include API routers
+app.include_router(projects_router)
+app.include_router(tasks_router)
+app.include_router(goals_router)
 
 # CORS middleware for development
 from fastapi.middleware.cors import CORSMiddleware
