@@ -1,0 +1,176 @@
+erDiagram
+    %% Core Entity Relationships
+    PROJECTS ||--o{ TASKS : "contains"
+    PROJECTS ||--o{ PROJECT_CONTEXT : "has_context"
+    PROJECTS ||--o{ SPRINTS : "includes"
+    PROJECTS ||--o{ ISSUES : "tracks"
+    PROJECTS ||--o{ REMINDERS : "relates_to"
+    PROJECTS }o--o{ GOALS : "achieves"
+    
+    TASKS ||--o{ TASKS : "parent_child"
+    TASKS ||--o{ TASK_COMMENTS : "has_comments"
+    TASKS ||--o{ TASK_ATTACHMENTS : "contains_files"
+    TASKS ||--o{ REMINDERS : "triggers"
+    TASKS }o--o{ TASKS : "dependencies"
+    TASKS }o--o{ SPRINTS : "assigned_to"
+    
+    GOALS ||--o{ GOALS : "parent_child"
+    
+    SPRINTS ||--o{ SCHEDULE_EVENTS : "contains_events"
+    TASKS ||--o{ SCHEDULE_EVENTS : "has_events"
+    
+    %% Core Tables
+    PROJECTS {
+        uuid id PK "Primary Key"
+        varchar name UK "Unique project name"
+        text description "Project description"
+        enum status "active|paused|completed|archived"
+        enum priority "low|medium|high|critical"
+        date start_date "Project start date"
+        date target_end_date "Target completion"
+        date actual_end_date "Actual completion"
+        timestamp created_at "Creation timestamp"
+        timestamp updated_at "Last update"
+        varchar created_by "Creator identifier"
+    }
+    
+    TASKS {
+        uuid id PK "Primary Key"
+        uuid project_id FK "Links to PROJECTS"
+        uuid parent_task_id FK "Self-reference for hierarchy"
+        varchar title "Task title"
+        text description "Task description"
+        enum task_type "epic|story|task|subtask|milestone|bug"
+        enum status "backlog|todo|in_progress|in_review|done|blocked|cancelled"
+        enum priority "lowest|low|medium|high|highest|critical"
+        int story_points "Estimation points"
+        decimal estimated_hours "Time estimate"
+        decimal actual_hours "Time spent"
+        date start_date "Task start date"
+        date due_date "Due date"
+        timestamp completed_date "Completion timestamp"
+        varchar assigned_to "Assignee identifier"
+        varchar created_by "Creator identifier"
+        int order_index "Sort order within parent"
+        timestamp created_at "Creation timestamp"
+        timestamp updated_at "Last update"
+    }
+    
+    TASK_DEPENDENCIES {
+        uuid id PK "Primary Key"
+        uuid task_id FK "Dependent task"
+        uuid depends_on_task_id FK "Dependency target"
+        enum dependency_type "blocks|subtask_of|related_to"
+        timestamp created_at "Creation timestamp"
+    }
+    
+    GOALS {
+        uuid id PK "Primary Key"
+        uuid parent_goal_id FK "Parent goal reference"
+        varchar title "Goal title"
+        text description "Goal description"
+        enum goal_type "long_term|medium_term|short_term|milestone"
+        date target_date "Target achievement date"
+        enum status "active|paused|completed|cancelled"
+        decimal progress_percentage "0-100 completion percentage"
+        timestamp created_at "Creation timestamp"
+        timestamp updated_at "Last update"
+    }
+    
+    GOAL_PROJECTS {
+        uuid goal_id FK "Links to GOALS"
+        uuid project_id FK "Links to PROJECTS"
+        decimal weight "Contribution weight (0-1)"
+    }
+    
+    SPRINTS {
+        uuid id PK "Primary Key"
+        uuid project_id FK "Links to PROJECTS"
+        varchar name "Sprint name"
+        text goal "Sprint objective"
+        date start_date "Sprint start"
+        date end_date "Sprint end"
+        enum status "planning|active|completed|cancelled"
+        timestamp created_at "Creation timestamp"
+        timestamp updated_at "Last update"
+    }
+    
+    SPRINT_TASKS {
+        uuid sprint_id FK "Links to SPRINTS"
+        uuid task_id FK "Links to TASKS"
+        timestamp added_at "Assignment timestamp"
+    }
+    
+    REMINDERS {
+        uuid id PK "Primary Key"
+        uuid task_id FK "Links to TASKS (optional)"
+        uuid project_id FK "Links to PROJECTS (optional)"
+        varchar title "Reminder title"
+        text message "Reminder content"
+        enum reminder_type "one_time|recurring"
+        timestamp trigger_datetime "When to trigger"
+        timestamp view_after "Visibility constraint"
+        json recurrence_pattern "For recurring reminders"
+        enum status "pending|acknowledged|snoozed|cancelled"
+        timestamp acknowledged_at "Acknowledgment time"
+        timestamp created_at "Creation timestamp"
+    }
+    
+    SCHEDULE_EVENTS {
+        uuid id PK "Primary Key"
+        uuid project_id FK "Links to PROJECTS (optional)"
+        uuid task_id FK "Links to TASKS (optional)"
+        enum event_type "deadline|meeting|milestone|reminder"
+        varchar title "Event title"
+        text description "Event description"
+        timestamp start_datetime "Event start"
+        timestamp end_datetime "Event end (optional)"
+        varchar location "Event location"
+        timestamp created_at "Creation timestamp"
+    }
+    
+    PROJECT_CONTEXT {
+        uuid id PK "Primary Key"
+        uuid project_id FK "Links to PROJECTS"
+        enum context_type "notes|links|files|settings|metadata"
+        varchar key "Context key"
+        json value "Context data (JSON)"
+        timestamp created_at "Creation timestamp"
+        timestamp updated_at "Last update"
+    }
+    
+    TASK_COMMENTS {
+        uuid id PK "Primary Key"
+        uuid task_id FK "Links to TASKS"
+        varchar author "Comment author"
+        text content "Comment content"
+        enum comment_type "comment|status_change|assignment|attachment"
+        json metadata "Additional data (JSON)"
+        timestamp created_at "Creation timestamp"
+    }
+    
+    TASK_ATTACHMENTS {
+        uuid id PK "Primary Key"
+        uuid task_id FK "Links to TASKS"
+        varchar filename "Original filename"
+        varchar file_path "Storage path"
+        bigint file_size "File size in bytes"
+        varchar mime_type "File MIME type"
+        varchar uploaded_by "Uploader identifier"
+        timestamp uploaded_at "Upload timestamp"
+    }
+    
+    ISSUES {
+        uuid id PK "Primary Key"
+        uuid project_id FK "Links to PROJECTS"
+        varchar title "Issue title"
+        text description "Issue description"
+        enum issue_type "bug|feature|enhancement|question"
+        enum priority "low|medium|high|critical"
+        enum status "triage|backlog|in_progress|resolved|closed"
+        varchar reporter "Issue reporter"
+        varchar assignee "Issue assignee"
+        uuid promoted_to_task_id FK "Links to TASKS when promoted"
+        timestamp created_at "Creation timestamp"
+        timestamp updated_at "Last update"
+    }
