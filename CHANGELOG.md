@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Documentation cleanup: Removed 12 development artifact markdown files to streamline repository structure
+- Preserved essential documentation: README, CONTRIBUTING, CHANGELOG, ROADMAP, database/README
+- All removed content archived in knowledge graph with full historical detail
+- Improved repository navigation and reduced maintenance overhead
+- Added CLEANUP_SUMMARY.md documenting changes and recovery procedures
+
 ### Fixed
 - Direct URL access navigation issues - all section URLs now display complete interfaces
 - Mobile navigation HTMX integration - smooth transitions on mobile devices
