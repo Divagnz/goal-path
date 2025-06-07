@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Complete CI/CD infrastructure with GitHub Actions workflows
-- Docker containerization with Python 3.12 and uv package manager
+- Docker containerization with Python 3.12.11 and uv package manager
 - Nomad deployment integration with staging and production environments
 - Security scanning with Bandit, Safety, and Semgrep
 - Self-hosted GitHub runner optimization for Debian Bookworm with pre-installed uv
