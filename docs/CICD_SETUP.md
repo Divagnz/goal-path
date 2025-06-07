@@ -17,7 +17,7 @@ Complete CI/CD infrastructure for GoalPath using GitHub Actions, self-hosted run
 - **Health Checks**: HTTP health checks on `/health` endpoint
 
 ### Docker Infrastructure
-- **Base Image**: Python 3.11 slim with uv package manager
+- **Base Image**: Python 3.12 slim with uv package manager (pre-installed on runner)
 - **Container Registry**: GitHub Container Registry (ghcr.io)
 - **Health Checks**: Built-in container health monitoring
 
@@ -63,3 +63,19 @@ IMAGE_TAG=latest ENVIRONMENT=production ./scripts/nomad/deploy.sh
 # Check deployment status
 ./scripts/nomad/status.sh
 ```
+
+
+## Self-Hosted Runner Configuration
+- **Runner Labels**: `[self-hosted, linux]`
+- **OS**: Debian Bookworm
+- **Python**: 3.12 (configured)
+- **Required Tools**: Docker, uv (pre-installed), curl, git
+- **Network Access**: Must reach Nomad server at 192.168.0.174:4646
+
+## Optimizations for Your Environment
+- **uv Pre-installed**: No need to install uv in workflows, already available on runner
+- **Python 3.12**: Updated all workflows to use latest Python version
+- **Direct Nomad API**: Custom deployment scripts using your specific Nomad server
+- **Efficient Workflows**: Reduced setup time by leveraging pre-installed tools
+
+This setup provides a complete CI/CD pipeline optimized for your existing infrastructure.

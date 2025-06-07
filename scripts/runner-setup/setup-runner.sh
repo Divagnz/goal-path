@@ -5,7 +5,7 @@ set -e
 
 # Configuration
 RUNNER_NAME="${RUNNER_NAME:-goalpath-runner-$(hostname)}"
-RUNNER_LABELS="${RUNNER_LABELS:-self-hosted,goalpath-runner,linux,x64}"
+RUNNER_LABELS="${RUNNER_LABELS:-self-hosted,goalpath-runner,linux,x64,python312}"
 GITHUB_REPO="${GITHUB_REPO:-Divagnz/goal-path}"
 RUNNER_VERSION="2.314.1"
 
