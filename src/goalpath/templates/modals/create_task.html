@@ -1,0 +1,281 @@
+<!-- Create Task Modal -->
+<div class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 modal-backdrop"
+     x-data="{ 
+         open: true, 
+         selectedProject: '{{ selected_project_id or '' }}',
+         isSubtask: {{ 'true' if parent_task_id else 'false' }},
+         parentTaskId: '{{ parent_task_id or '' }}'
+     }"
+     x-show="open"
+     x-transition:enter="ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     @click="open = false; $el.remove()">
+    
+    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto"
+         @click.stop
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+        
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">
+                {% if parent_task_id %}
+                Create Subtask for "{{ parent_task.title }}"
+                {% else %}
+                Create New Task
+                {% endif %}
+            </h3>
+            <button @click="open = false; $el.closest('.modal-backdrop').remove()" 
+                    class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Modal Body -->
+        <form hx-post="/htmx/tasks/create" 
+              hx-target="#recent-tasks-container" 
+              hx-swap="afterbegin"
+              hx-on::after-request="if(event.detail.successful) { $el.closest('.modal-backdrop').remove(); }"
+              class="p-6 space-y-4">
+            
+            <!-- Task Title -->
+            <div>
+                <label for="task-title" class="block text-sm font-medium text-gray-700 mb-1">
+                    Task Title *
+                </label>
+                <input type="text" 
+                       id="task-title" 
+                       name="title" 
+                       required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                       placeholder="What needs to be done?">
+            </div>
+            
+            <!-- Description -->
+            <div>
+                <label for="task-description" class="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                </label>
+                <textarea id="task-description" 
+                          name="description" 
+                          rows="3"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Provide details about the task"></textarea>
+            </div>
+            
+            <!-- Project Selection -->
+            {% if not parent_task_id %}
+            <div>
+                <label for="task-project" class="block text-sm font-medium text-gray-700 mb-1">
+                    Project *
+                </label>
+                <select id="task-project" 
+                        name="project_id" 
+                        x-model="selectedProject"
+                        x-init="selectedProject = '{{ selected_project_id or '' }}'"
+                        required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Select a project</option>
+                    {% for project in projects %}
+                    <option value="{{ project.id }}" {% if selected_project_id == project.id %}selected{% endif %}>{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% else %}
+            <!-- Hidden project field for subtasks -->
+            <input type="hidden" name="project_id" value="{{ parent_task.project_id }}">
+            <input type="hidden" name="parent_task_id" value="{{ parent_task_id }}">
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-blue-700">
+                            This subtask will be created under <strong>{{ parent_task.title }}</strong> in project <strong>{{ parent_task.project.name if parent_task.project else 'Unknown' }}</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Task Type and Priority Row -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="task-type" class="block text-sm font-medium text-gray-700 mb-1">
+                        Task Type
+                    </label>
+                    <select id="task-type" 
+                            name="task_type"
+                            {% if parent_task_id %}x-init="$el.value = 'subtask'"{% endif %}
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        {% if parent_task_id %}
+                        <option value="subtask" selected>Subtask</option>
+                        {% else %}
+                        <option value="task" selected>Task</option>
+                        <option value="story">Story</option>
+                        <option value="epic">Epic</option>
+                        <option value="subtask">Subtask</option>
+                        <option value="milestone">Milestone</option>
+                        <option value="bug">Bug</option>
+                        {% endif %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="task-priority" class="block text-sm font-medium text-gray-700 mb-1">
+                        Priority
+                    </label>
+                    <select id="task-priority" 
+                            name="priority"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="lowest">Lowest</option>
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                        <option value="highest">Highest</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Status and Assignee Row -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="task-status" class="block text-sm font-medium text-gray-700 mb-1">
+                        Status
+                    </label>
+                    <select id="task-status" 
+                            name="status"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="backlog">Backlog</option>
+                        <option value="todo" selected>To Do</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="in_review">In Review</option>
+                        <option value="done">Done</option>
+                        <option value="blocked">Blocked</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="task-assignee" class="block text-sm font-medium text-gray-700 mb-1">
+                        Assignee
+                    </label>
+                    <input type="text" 
+                           id="task-assignee" 
+                           name="assigned_to"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="Assign to team member">
+                </div>
+            </div>
+            
+            <!-- Parent Task Selection (if creating subtask) -->
+            <div x-show="$el.querySelector('#task-type').value === 'subtask'">
+                <label for="parent-task" class="block text-sm font-medium text-gray-700 mb-1">
+                    Parent Task
+                </label>
+                <select id="parent-task" 
+                        name="parent_task_id"
+                        hx-get="/api/tasks/by-project"
+                        hx-trigger="change from:#task-project"
+                        hx-target="this"
+                        hx-swap="innerHTML"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Select parent task</option>
+                </select>
+            </div>
+            
+            <!-- Estimation and Dates -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="task-estimation" class="block text-sm font-medium text-gray-700 mb-1">
+                        Estimated Hours
+                    </label>
+                    <input type="number" 
+                           id="task-estimation" 
+                           name="estimated_hours" 
+                           step="0.5" 
+                           min="0"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="0.0">
+                </div>
+                
+                <div>
+                    <label for="task-story-points" class="block text-sm font-medium text-gray-700 mb-1">
+                        Story Points
+                    </label>
+                    <select id="task-story-points" 
+                            name="story_points"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">No estimate</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                        <option value="8">8</option>
+                        <option value="13">13</option>
+                        <option value="21">21</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Start and Due Dates -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="task-start-date" class="block text-sm font-medium text-gray-700 mb-1">
+                        Start Date
+                    </label>
+                    <input type="date" 
+                           id="task-start-date" 
+                           name="start_date"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="task-due-date" class="block text-sm font-medium text-gray-700 mb-1">
+                        Due Date
+                    </label>
+                    <input type="date" 
+                           id="task-due-date" 
+                           name="due_date"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <button type="button" 
+                        @click="open = false; $el.closest('.modal-backdrop').remove()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                    <span class="htmx-indicator">
+                        <svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Creating...
+                    </span>
+                    <span class="htmx-indicator" style="display: none;">Creating...</span>
+                    <span>Create Task</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

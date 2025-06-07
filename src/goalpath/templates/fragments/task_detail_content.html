@@ -1,0 +1,352 @@
+<!-- Task Detail Content Fragment -->
+<div class="px-4 py-6 sm:px-0" x-data="taskDetailData()">
+    <!-- Task Header -->
+    <div class="mb-8">
+        <!-- Breadcrumb -->
+        <nav class="flex mb-4" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                {% if project %}
+                <li class="inline-flex items-center">
+                    <a href="/projects" 
+                       hx-get="/projects"
+                       hx-target="#main-content"
+                       hx-push-url="true"
+                       class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                        Projects
+                    </a>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <a href="/projects/{{ project.id }}"
+                           hx-get="/projects/{{ project.id }}"
+                           hx-target="#main-content"
+                           hx-push-url="true"
+                           class="ml-1 text-sm font-medium text-gray-500 hover:text-blue-600 md:ml-2">{{ project.name }}</a>
+                    </div>
+                </li>
+                {% endif %}
+                <li>
+                    <div class="flex items-center">
+                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">{{ task.title }}</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+        
+        <!-- Task Title and Actions -->
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex-1">
+                <div class="flex items-center space-x-3 mb-2">
+                    <h1 class="text-3xl font-bold text-gray-900">{{ task.title }}</h1>
+                    <span class="status-badge status-{{ task.status }}">{{ task.status.replace('_', ' ').title() }}</span>
+                    <span class="status-badge priority-{{ task.priority }}">{{ task.priority.title() }}</span>
+                    {% if task.task_type != 'task' %}
+                    <span class="status-badge bg-purple-100 text-purple-800 border border-purple-200">{{ task.task_type.title() }}</span>
+                    {% endif %}
+                </div>
+                <p class="text-lg text-gray-600">{{ task.description or 'No description provided.' }}</p>
+                
+                <!-- Task Meta -->
+                <div class="flex flex-wrap items-center space-x-6 mt-4 text-sm text-gray-500">
+                    {% if task.start_date %}
+                    <div class="flex items-center">
+                        <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Started: {{ task.start_date.strftime('%B %d, %Y') }}
+                    </div>
+                    {% endif %}
+                    {% if task.due_date %}
+                    <div class="flex items-center">
+                        <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Due: {{ task.due_date.strftime('%B %d, %Y') }}
+                    </div>
+                    {% endif %}
+                    <div class="flex items-center">
+                        <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Created by: {{ task.created_by or 'System' }}
+                    </div>
+                    {% if task.assigned_to %}
+                    <div class="flex items-center">
+                        <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Assigned to: {{ task.assigned_to }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="mt-4 lg:mt-0 flex space-x-3">
+                <button hx-get="/modals/edit-task/{{ task.id }}" 
+                        hx-target="#modal-container"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                    <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                    Edit Task
+                </button>
+                
+                {% if task.task_type in ['epic', 'story', 'task'] %}
+                <button hx-get="/modals/create-task?parent_task_id={{ task.id }}" 
+                        hx-target="#modal-container"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors">
+                    <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Add Subtask
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Overview -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Status Card -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-medium text-gray-500">Current Status</h3>
+                <span class="text-2xl">
+                    {% if task.status == 'done' %}✅
+                    {% elif task.status == 'in_progress' %}🔄
+                    {% elif task.status == 'blocked' %}🚫
+                    {% else %}📋{% endif %}
+                </span>
+            </div>
+            <div class="text-lg font-medium text-gray-900">{{ task.status.replace('_', ' ').title() }}</div>
+        </div>
+        
+        <!-- Subtasks Summary (if applicable) -->
+        {% if subtasks %}
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-medium text-gray-500">Subtasks</h3>
+                <div class="text-2xl font-bold text-gray-900">
+                    {{ completion_stats.completed_subtasks }} / {{ completion_stats.total_subtasks }}
+                </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+                <div class="bg-blue-600 h-3 rounded-full progress-bar" 
+                     style="width: {{ completion_stats.completion_percentage }}%"></div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Time Tracking -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-medium text-gray-500">Time Estimate</h3>
+                <div class="text-2xl font-bold text-gray-900">
+                    {{ task.estimated_hours or '—' }}{% if task.estimated_hours %}h{% endif %}
+                </div>
+            </div>
+            <div class="text-sm text-gray-500">
+                {% if task.story_points %}
+                {{ task.story_points }} story points
+                {% else %}
+                No story points set
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Progress -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-medium text-gray-500">Priority</h3>
+                <span class="status-badge priority-{{ task.priority }}">{{ task.priority.title() }}</span>
+            </div>
+            <div class="text-sm text-gray-500">
+                {% if task.task_type %}
+                Type: {{ task.task_type.title() }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Subtasks Section (if this task can have subtasks) -->
+    {% if task.task_type in ['epic', 'story', 'task'] %}
+    <div class="bg-white shadow-sm rounded-lg mb-8">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">
+                Subtasks 
+                {% if subtasks %}({{ subtasks|length }}){% endif %}
+            </h3>
+            <button hx-get="/modals/create-task?parent_task_id={{ task.id }}" 
+                    hx-target="#modal-container"
+                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 rounded-md transition-colors">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Subtask
+            </button>
+        </div>
+        
+        <div class="p-6">
+            {% if subtasks %}
+            <div class="space-y-3" id="subtasks-container">
+                {% for subtask in subtasks %}
+                <div id="subtask-{{ subtask.id }}" class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors group">
+                    <div class="flex items-center flex-1">
+                        <input type="checkbox" 
+                               {% if subtask.status == 'done' %}checked{% endif %}
+                               hx-put="/htmx/tasks/{{ subtask.id }}/status?status={% if subtask.status == 'done' %}todo{% else %}done{% endif %}"
+                               hx-target="#subtask-{{ subtask.id }}"
+                               hx-swap="outerHTML"
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <div class="ml-4 flex-1">
+                            <h4 class="text-sm font-medium text-gray-900 {% if subtask.status == 'done' %}line-through text-gray-500{% endif %}">
+                                <a href="/tasks/{{ subtask.id }}"
+                                   hx-get="/tasks/{{ subtask.id }}"
+                                   hx-target="#main-content"
+                                   hx-push-url="true"
+                                   class="hover:text-blue-600">{{ subtask.title }}</a>
+                            </h4>
+                            {% if subtask.description %}
+                            <p class="text-xs text-gray-500 mt-1">{{ subtask.description[:100] }}{% if subtask.description|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+                            <div class="flex items-center space-x-4 mt-2">
+                                {% if subtask.due_date %}
+                                <span class="text-xs text-gray-500">Due: {{ subtask.due_date.strftime('%m/%d') }}</span>
+                                {% endif %}
+                                {% if subtask.estimated_hours %}
+                                <span class="text-xs text-gray-500">{{ subtask.estimated_hours }}h</span>
+                                {% endif %}
+                                {% if subtask.assigned_to %}
+                                <span class="text-xs text-gray-500">{{ subtask.assigned_to }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="status-badge status-{{ subtask.status }}">
+                            {{ subtask.status.replace('_', ' ').title() }}
+                        </span>
+                        <span class="status-badge priority-{{ subtask.priority }}">
+                            {{ subtask.priority.title() }}
+                        </span>
+                        <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button hx-get="/modals/edit-task/{{ subtask.id }}" 
+                                    hx-target="#modal-container"
+                                    class="text-gray-400 hover:text-gray-600">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No subtasks yet</h3>
+                <p class="mt-1 text-sm text-gray-500">Create subtasks to break down this {{ task.task_type }}.</p>
+                <button hx-get="/modals/create-task?parent_task_id={{ task.id }}" 
+                        hx-target="#modal-container"
+                        class="mt-3 inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                    Add Subtask
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Parent Task (if this is a subtask) -->
+    {% if parent_task %}
+    <div class="bg-white shadow-sm rounded-lg mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Parent Task</h3>
+        </div>
+        
+        <div class="p-6">
+            <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                <div class="flex items-center flex-1">
+                    <div class="flex-1">
+                        <h4 class="text-sm font-medium text-gray-900">
+                            <a href="/tasks/{{ parent_task.id }}"
+                               hx-get="/tasks/{{ parent_task.id }}"
+                               hx-target="#main-content"
+                               hx-push-url="true"
+                               class="hover:text-blue-600">{{ parent_task.title }}</a>
+                        </h4>
+                        {% if parent_task.description %}
+                        <p class="text-xs text-gray-500 mt-1">{{ parent_task.description[:100] }}{% if parent_task.description|length > 100 %}...{% endif %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="status-badge status-{{ parent_task.status }}">
+                        {{ parent_task.status.replace('_', ' ').title() }}
+                    </span>
+                    <span class="status-badge bg-purple-100 text-purple-800 border border-purple-200">
+                        {{ parent_task.task_type.title() }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Related Tasks -->
+    {% if related_tasks %}
+    <div class="bg-white shadow-sm rounded-lg mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Related Tasks in {{ project.name }}</h3>
+        </div>
+        
+        <div class="p-6">
+            <div class="space-y-3">
+                {% for related_task in related_tasks %}
+                <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                    <div class="flex items-center flex-1">
+                        <div class="flex-1">
+                            <h4 class="text-sm font-medium text-gray-900">
+                                <a href="/tasks/{{ related_task.id }}"
+                                   hx-get="/tasks/{{ related_task.id }}"
+                                   hx-target="#main-content"
+                                   hx-push-url="true"
+                                   class="hover:text-blue-600">{{ related_task.title }}</a>
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="status-badge status-{{ related_task.status }}">
+                            {{ related_task.status.replace('_', ' ').title() }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function taskDetailData() {
+    return {        
+        init() {
+            console.log('Task detail fragment initialized');
+        }
+    };
+}
+</script>

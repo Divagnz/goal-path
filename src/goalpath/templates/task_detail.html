@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}{{ task.title }} - GoalPath{% endblock %}
+
+{% block content %}
+<!-- Task Detail Page Content -->
+<div class="px-4 py-6 sm:px-0" x-data="taskDetailData()">
+    <!-- Include the task detail fragment content -->
+    {% include "fragments/task_detail_content.html" %}
+</div>
+
+<script>
+function taskDetailData() {
+    return {
+        init() {
+            console.log('Task detail page initialized');
+        },
+        
+        toggleSubtaskStatus(subtaskId, currentStatus) {
+            const newStatus = currentStatus === 'done' ? 'todo' : 'done';
+            htmx.ajax('PUT', `/htmx/tasks/${subtaskId}/status?status=${newStatus}`, {
+                target: `#subtask-${subtaskId}`,
+                swap: 'outerHTML'
+            });
+        }
+    };
+}
+</script>
+{% endblock %}

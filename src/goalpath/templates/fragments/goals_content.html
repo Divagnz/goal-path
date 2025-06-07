@@ -1,0 +1,172 @@
+<!-- Goals Page Content Fragment -->
+<div class="px-4 py-6 sm:px-0" x-data="goalsData()">
+    <!-- Goals Header -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Goals</h1>
+            <p class="text-gray-600">Set, track, and achieve your strategic objectives.</p>
+        </div>
+        <div class="mt-4 lg:mt-0 flex space-x-3">
+            <button hx-get="/modals/create-goal" 
+                    hx-target="#modal-container"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                New Goal
+            </button>
+        </div>
+    </div>
+
+    <!-- Goals Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow-sm">
+            <div class="flex items-center">
+                <div class="p-2 bg-purple-100 rounded-lg">
+                    <svg class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Total Goals</p>
+                    <p class="text-xl font-semibold text-gray-900">{{ goals|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-sm">
+            <div class="flex items-center">
+                <div class="p-2 bg-green-100 rounded-lg">
+                    <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Active</p>
+                    <p class="text-xl font-semibold text-gray-900">{{ goals|selectattr("status", "equalto", "active")|list|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-sm">
+            <div class="flex items-center">
+                <div class="p-2 bg-blue-100 rounded-lg">
+                    <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Achieved</p>
+                    <p class="text-xl font-semibold text-gray-900">{{ goals|selectattr("status", "equalto", "achieved")|list|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-sm">
+            <div class="flex items-center">
+                <div class="p-2 bg-yellow-100 rounded-lg">
+                    <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Avg Progress</p>
+                    {% set avg_progress = (goals|sum(attribute='calculated_progress', start=0) / goals|length) if goals else 0 %}
+                    <p class="text-xl font-semibold text-gray-900">{{ "%.0f"|format(avg_progress) }}%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Goals Grid -->
+    {% if goals %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for goal in goals %}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:border-blue-300 transition-colors card-hover">
+            <div class="p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-medium text-gray-900 hover:text-blue-600">
+                            <a href="/goals/{{ goal.id }}">{{ goal.title }}</a>
+                        </h3>
+                        <p class="text-sm text-gray-500 mt-1">{{ goal.description[:100] }}{% if goal.description|length > 100 %}...{% endif %}</p>
+                    </div>
+                    <span class="status-badge status-{{ goal.status }}">{{ goal.status.title() }}</span>
+                </div>
+                
+                <!-- Goal Progress Circle -->
+                <div class="flex items-center justify-center mb-4">
+                    <div class="relative w-20 h-20">
+                        <svg class="w-20 h-20 transform -rotate-90" viewBox="0 0 32 32">
+                            <circle cx="16" cy="16" r="14" stroke="#e5e7eb" stroke-width="2" fill="none"></circle>
+                            <circle cx="16" cy="16" r="14" 
+                                    stroke="#8b5cf6" 
+                                    stroke-width="2" 
+                                    fill="none"
+                                    stroke-dasharray="{{ ((goal.calculated_progress|float / 100) * 87.96)|round(2) }} 87.96"
+                                    stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="text-lg font-semibold text-gray-900">{{ goal.calculated_progress|float|int }}%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Goal Info -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-500">Type</span>
+                        <span class="status-badge status-{{ goal.goal_type }}">
+                            {{ goal.goal_type.replace('_', ' ').title() }}
+                        </span>
+                    </div>
+                    {% if goal.target_date %}
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-500">Target Date</span>
+                        <span class="text-gray-900">{{ goal.target_date.strftime('%m/%d/%Y') if goal.target_date else 'No target date' }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-500">Linked Projects</span>
+                        <span class="text-gray-900">{{ goal.linked_projects if hasattr(goal, 'linked_projects') else 0 }}</span>
+                    </div>
+                </div>
+                
+                <!-- Action buttons -->
+                <div class="flex space-x-2 mt-4">
+                    <button hx-get="/modals/edit-goal/{{ goal.id }}" 
+                            hx-target="#modal-container"
+                            class="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
+                        Edit
+                    </button>
+                    <a href="/goals/{{ goal.id }}" 
+                       class="flex-1 px-3 py-2 text-xs font-medium text-center text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors">
+                        View
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        </svg>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">No goals yet</h3>
+        <p class="mt-2 text-sm text-gray-500">Set your first goal to start achieving your objectives.</p>
+        <button hx-get="/modals/create-goal" 
+                hx-target="#modal-container"
+                class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+            Create Goal
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function goalsData() {
+    return {
+        init() {
+            console.log('Goals page initialized');
+        }
+    };
+}
+</script>

@@ -11,60 +11,533 @@
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     
+    <!-- HTMX Extensions -->
+    <script src="https://unpkg.com/htmx.org/dist/ext/response-targets.js"></script>
+    <script src="https://unpkg.com/htmx.org/dist/ext/loading-states.js"></script>
+    
+    <!-- Alpine.js for enhanced interactivity -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Chart.js for progress visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-in': 'slideIn 0.3s ease-in-out',
+                        'pulse-soft': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideIn: {
+                            '0%': { transform: 'translateY(-10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
     <!-- Custom styles -->
     <style>
         [x-cloak] { display: none !important; }
+        
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Loading animation */
+        .htmx-indicator {
+            display: none;
+        }
+        .htmx-request .htmx-indicator {
+            display: inline;
+        }
+        .htmx-request.htmx-indicator {
+            display: inline;
+        }
+        
+        /* Progress bar animation */
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        
+        /* Drag and drop styles */
+        .drag-over {
+            @apply bg-blue-50 border-blue-300 border-dashed;
+        }
+        
+        /* Modal backdrop */
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+        
+        /* Card hover effects */
+        .card-hover {
+            transition: all 0.2s ease-in-out;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Status badges */
+        .status-badge {
+            @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+        }
+        
+        /* Priority indicators */
+        .priority-critical { @apply bg-red-100 text-red-800 border border-red-200; }
+        .priority-high { @apply bg-orange-100 text-orange-800 border border-orange-200; }
+        .priority-medium { @apply bg-blue-100 text-blue-800 border border-blue-200; }
+        .priority-low { @apply bg-gray-100 text-gray-800 border border-gray-200; }
+        
+        /* Status indicators */
+        .status-active { @apply bg-green-100 text-green-800 border border-green-200; }
+        .status-paused { @apply bg-yellow-100 text-yellow-800 border border-yellow-200; }
+        .status-completed { @apply bg-blue-100 text-blue-800 border border-blue-200; }
+        .status-todo { @apply bg-gray-100 text-gray-800 border border-gray-200; }
+        .status-in_progress { @apply bg-blue-100 text-blue-800 border border-blue-200; }
+        .status-done { @apply bg-green-100 text-green-800 border border-green-200; }
+        .status-blocked { @apply bg-red-100 text-red-800 border border-red-200; }
+        .status-cancelled { @apply bg-gray-100 text-gray-600 border border-gray-200; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen" 
+      x-data="{ 
+          sidebarOpen: false, 
+          notifications: [], 
+          currentUser: 'User',
+          theme: 'light'
+      }"
+      hx-ext="loading-states">
+    
+    <!-- Loading overlay -->
+    <div id="loading-overlay" 
+         class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <span class="text-gray-700 font-medium">Loading...</span>
+        </div>
+    </div>
+    
+    <!-- Notification container -->
+    <div id="notifications" 
+         class="fixed top-4 right-4 z-40 space-y-2"
+         x-data="{ notifications: [] }">
+        <template x-for="notification in notifications" :key="notification.id">
+            <div x-show="notification.visible"
+                 x-transition:enter="transform ease-out duration-300"
+                 x-transition:enter-start="translate-x-full opacity-0"
+                 x-transition:enter-end="translate-x-0 opacity-100"
+                 x-transition:leave="transform ease-in duration-200"
+                 x-transition:leave-start="translate-x-0 opacity-100"
+                 x-transition:leave-end="translate-x-full opacity-0"
+                 class="max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5">
+                <div class="p-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <div x-show="notification.type === 'success'" class="w-6 h-6 text-green-500">
+                                <svg fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <div x-show="notification.type === 'error'" class="w-6 h-6 text-red-500">
+                                <svg fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-3 w-0 flex-1 pt-0.5">
+                            <p class="text-sm font-medium text-gray-900" x-text="notification.title"></p>
+                            <p class="mt-1 text-sm text-gray-500" x-text="notification.message"></p>
+                        </div>
+                        <div class="ml-4 flex-shrink-0 flex">
+                            <button @click="notification.visible = false"
+                                    class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500">
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+    
     <!-- Navigation Header -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <h1 class="text-xl font-semibold text-gray-900">
-                        <a href="/" class="hover:text-blue-600">🎯 GoalPath</a>
+                    <!-- Mobile menu button -->
+                    <button @click="sidebarOpen = !sidebarOpen" 
+                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 lg:hidden">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                    
+                    <!-- Logo -->
+                    <h1 class="text-xl font-semibold text-gray-900 ml-2 lg:ml-0">
+                        <a href="/" class="flex items-center hover:text-blue-600 transition-colors">
+                            <span class="text-2xl mr-2">🎯</span>
+                            GoalPath
+                        </a>
                     </h1>
                 </div>
                 
-                <div class="flex items-center space-x-4">
-                    <a href="/projects" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                <!-- Desktop Navigation -->
+                <div class="hidden lg:flex items-center space-x-1">
+                    <a href="/" 
+                       class="nav-link text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md text-sm font-medium transition-all"
+                       hx-get="/" 
+                       hx-target="#main-content" 
+                       hx-push-url="true">
+                        Dashboard
+                    </a>
+                    <a href="/projects" 
+                       class="nav-link text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md text-sm font-medium transition-all"
+                       hx-get="/projects" 
+                       hx-target="#main-content" 
+                       hx-push-url="true">
                         Projects
                     </a>
-                    <a href="/tasks" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                    <a href="/tasks" 
+                       class="nav-link text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md text-sm font-medium transition-all"
+                       hx-get="/tasks" 
+                       hx-target="#main-content" 
+                       hx-push-url="true">
                         Tasks
                     </a>
-                    <a href="/goals" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                    <a href="/goals" 
+                       class="nav-link text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md text-sm font-medium transition-all"
+                       hx-get="/goals" 
+                       hx-target="#main-content" 
+                       hx-push-url="true">
                         Goals
                     </a>
-                    <a href="/schedule" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
-                        Schedule
+                    <a href="/analytics" 
+                       class="nav-link text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md text-sm font-medium transition-all"
+                       hx-get="/analytics" 
+                       hx-target="#main-content" 
+                       hx-push-url="true">
+                        Analytics
                     </a>
+                </div>
+                
+                <!-- User menu and actions -->
+                <div class="flex items-center space-x-3">
+                    <!-- Quick add button -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" 
+                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                            <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Add
+                        </button>
+                        
+                        <!-- Dropdown menu -->
+                        <div x-show="open" 
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             @click.away="open = false"
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                            <div class="py-1">
+                                <button hx-get="/modals/create-project" 
+                                        hx-target="#modal-container"
+                                        @click="open = false"
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    📋 New Project
+                                </button>
+                                <button hx-get="/modals/create-task" 
+                                        hx-target="#modal-container"
+                                        @click="open = false"
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    ✅ New Task
+                                </button>
+                                <button hx-get="/modals/create-goal" 
+                                        hx-target="#modal-container"
+                                        @click="open = false"
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    🎯 New Goal
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notifications -->
+                    <button class="relative p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-md transition-colors">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
+                        </svg>
+                        <span class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400"></span>
+                    </button>
+                    
+                    <!-- User avatar -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" 
+                                class="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 transition-colors">
+                            <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                <span class="text-white text-sm font-medium" x-text="currentUser.charAt(0)"></span>
+                            </div>
+                        </button>
+                        
+                        <div x-show="open" 
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             @click.away="open = false"
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                            <div class="py-1">
+                                <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                                <a href="/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                                <a href="/logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign out</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
+    
+    <!-- Mobile sidebar -->
+    <div x-show="sidebarOpen" 
+         x-transition:enter="transition ease-in-out duration-300"
+         x-transition:enter-start="-translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition ease-in-out duration-300"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="-translate-x-full"
+         class="lg:hidden fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform">
+        <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900">Menu</h2>
+            <button @click="sidebarOpen = false" class="text-gray-400 hover:text-gray-500">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <nav class="px-4 py-4 space-y-2">
+            <a href="/" @click="sidebarOpen = false" 
+               hx-get="/" 
+               hx-target="#main-content" 
+               hx-push-url="true"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                Dashboard
+            </a>
+            <a href="/projects" @click="sidebarOpen = false"
+               hx-get="/projects" 
+               hx-target="#main-content" 
+               hx-push-url="true"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                Projects
+            </a>
+            <a href="/tasks" @click="sidebarOpen = false"
+               hx-get="/tasks" 
+               hx-target="#main-content" 
+               hx-push-url="true"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                Tasks
+            </a>
+            <a href="/goals" @click="sidebarOpen = false"
+               hx-get="/goals" 
+               hx-target="#main-content" 
+               hx-push-url="true"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                Goals
+            </a>
+            <a href="/analytics" @click="sidebarOpen = false"
+               hx-get="/analytics" 
+               hx-target="#main-content" 
+               hx-push-url="true"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                Analytics
+            </a>
+        </nav>
+    </div>
+    
+    <!-- Sidebar overlay -->
+    <div x-show="sidebarOpen" 
+         x-transition:enter="transition-opacity ease-linear duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-linear duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="sidebarOpen = false"
+         class="lg:hidden fixed inset-0 z-30 bg-gray-600 bg-opacity-75"></div>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <main id="main-content" class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {% block content %}{% endblock %}
     </main>
-
-    <!-- HTMX Configuration -->
+    
+    <!-- Modal container -->
+    <div id="modal-container"></div>
+    
+    <!-- HTMX Configuration and Custom Scripts -->
     <script>
-        // Configure HTMX
-        htmx.config.globalViewTransitions = true;
+        // Configure HTMX for proper navigation
+        htmx.config.globalViewTransitions = false;  // Disable to prevent conflicts
+        htmx.config.useTemplateFragments = true;
+        htmx.config.defaultSwapStyle = 'innerHTML';
+        htmx.config.scrollIntoView = false;
         
-        // Add loading indicator
+        // Global notification system
+        window.showNotification = function(title, message, type = 'success') {
+            const id = Date.now();
+            const notification = {
+                id: id,
+                title: title,
+                message: message,
+                type: type,
+                visible: true
+            };
+            
+            // Add to Alpine.js notifications array
+            const notificationContainer = document.querySelector('#notifications');
+            if (notificationContainer._x_dataStack) {
+                notificationContainer._x_dataStack[0].notifications.push(notification);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    const notif = notificationContainer._x_dataStack[0].notifications.find(n => n.id === id);
+                    if (notif) notif.visible = false;
+                    
+                    // Remove from array after animation
+                    setTimeout(() => {
+                        const index = notificationContainer._x_dataStack[0].notifications.findIndex(n => n.id === id);
+                        if (index > -1) notificationContainer._x_dataStack[0].notifications.splice(index, 1);
+                    }, 300);
+                }, 5000);
+            }
+        };
+        
+        // Global loading state management
+        window.showLoading = function() {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            document.getElementById('loading-overlay').classList.add('flex');
+        };
+        
+        window.hideLoading = function() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+            document.getElementById('loading-overlay').classList.remove('flex');
+        };
+        
+        // HTMX event listeners
         document.body.addEventListener('htmx:beforeRequest', function(evt) {
-            // Add loading spinner or indication
-            console.log('Request starting...');
+            showLoading();
         });
         
         document.body.addEventListener('htmx:afterRequest', function(evt) {
-            // Remove loading indicator
-            console.log('Request completed.');
+            hideLoading();
+            
+            // Show success notification for successful operations
+            if (evt.detail.xhr.status >= 200 && evt.detail.xhr.status < 300) {
+                const response = evt.detail.xhr.response;
+                try {
+                    const data = JSON.parse(response);
+                    if (data.message) {
+                        showNotification('Success', data.message, 'success');
+                    }
+                } catch (e) {
+                    // Response is not JSON, that's fine for HTMX responses
+                }
+            }
         });
+        
+        // Handle HTMX events
+        document.body.addEventListener('showNotification', function(evt) {
+            const detail = evt.detail.value;
+            showNotification(detail.title, detail.message, detail.type);
+        });
+        
+        document.body.addEventListener('closeModal', function(evt) {
+            const modal = document.querySelector('.modal-backdrop');
+            if (modal) {
+                modal.remove();
+            }
+        });
+        
+        document.body.addEventListener('updateDashboardStats', function(evt) {
+            // Dashboard stats update disabled to prevent unwanted auto-refresh
+            // Refresh dashboard statistics
+            // htmx.ajax('GET', '/api/dashboard/stats', {
+            //     target: '#dashboard-stats',
+            //     swap: 'innerHTML'
+            // });
+            console.log('Dashboard stats update disabled to prevent auto-refresh');
+        });
+        
+        document.body.addEventListener('htmx:responseError', function(evt) {
+            hideLoading();
+            showNotification('Error', 'Something went wrong. Please try again.', 'error');
+        });
+        
+        // Real-time updates disabled - using user-initiated navigation only
+        // Auto-refresh removed to prevent infinite loops and ensure proper AJAX navigation
+        
+        // Progress bar animation helper
+        window.animateProgress = function(element, targetWidth) {
+            let currentWidth = 0;
+            const increment = targetWidth / 20;
+            const timer = setInterval(() => {
+                if (currentWidth >= targetWidth) {
+                    clearInterval(timer);
+                    return;
+                }
+                currentWidth += increment;
+                element.style.width = Math.min(currentWidth, targetWidth) + '%';
+            }, 50);
+        };
+        
+        // Drag and drop helper functions
+        window.initDragAndDrop = function() {
+            // Will be implemented for task reordering
+        };
+        
+        // Theme switcher
+        window.toggleTheme = function() {
+            // Will be implemented for dark/light mode
+        };
     </script>
 </body>
 </html>
