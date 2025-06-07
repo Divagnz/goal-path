@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - GoalPath{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-0">
+    <!-- Projects Header -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Projects</h1>
+            <p class="text-gray-600">Manage and track your project portfolio.</p>
+        </div>
+        <div class="mt-4 lg:mt-0">
+            <button hx-get="/modals/create-project" 
+                    hx-target="#modal-container"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                New Project
+            </button>
+        </div>
+    </div>
+
+    <!-- Project Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 card-hover">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Total Projects</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ projects|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 card-hover">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Active</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ projects|selectattr("status", "equalto", "active")|list|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 card-hover">
+            <div class="flex items-center">
+                <div class="p-3 bg-yellow-100 rounded-lg">
+                    <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">In Progress</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ projects|selectattr("status", "equalto", "active")|list|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 card-hover">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 rounded-lg">
+                    <svg class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Completed</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ projects|selectattr("status", "equalto", "completed")|list|length }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Grid -->
+    {% if projects %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for project in projects %}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:border-blue-300 transition-colors card-hover">
+            <div class="p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-medium text-gray-900 hover:text-blue-600">
+                            <a href="/projects/{{ project.id }}" 
+                               hx-get="/projects/{{ project.id }}"
+                               hx-target="#main-content"
+                               hx-push-url="true">{{ project.name }}</a>
+                        </h3>
+                        <p class="text-sm text-gray-500 mt-1">{{ project.description }}</p>
+                    </div>
+                    <span class="status-badge status-{{ project.status }}">{{ project.status.title() }}</span>
+                </div>
+                
+                <!-- Progress -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between text-sm text-gray-500 mb-2">
+                        <span>Progress</span>
+                        <span>{{ project.completion_percentage|round|int }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" 
+                             style="width: {{ project.completion_percentage|round|int }}%"></div>
+                    </div>
+                </div>
+                
+                <!-- Project Stats -->
+                <div class="flex items-center justify-between text-sm text-gray-500">
+                    <div class="flex items-center">
+                        <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        {{ project.total_tasks or 0 }} tasks
+                    </div>
+                    <span class="status-badge priority-{{ project.priority }}">{{ project.priority.title() }}</span>
+                </div>
+                
+                <!-- Action buttons -->
+                <div class="flex space-x-2 mt-4">
+                    <button hx-get="/modals/edit-project/{{ project.id }}" 
+                            hx-target="#modal-container"
+                            class="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
+                        Edit
+                    </button>
+                    <a href="/projects/{{ project.id }}" 
+                       hx-get="/projects/{{ project.id }}"
+                       hx-target="#main-content"
+                       hx-push-url="true"
+                       class="flex-1 px-3 py-2 text-xs font-medium text-center text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors">
+                        View
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+        </svg>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">No projects yet</h3>
+        <p class="mt-2 text-sm text-gray-500">Get started by creating your first project.</p>
+        <button hx-get="/modals/create-project" 
+                hx-target="#modal-container"
+                class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+            Create Project
+        </button>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

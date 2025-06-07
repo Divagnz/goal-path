@@ -3,178 +3,232 @@
 {% block title %}Dashboard - GoalPath{% endblock %}
 
 {% block content %}
-<div class="px-4 py-6 sm:px-0">
-    <!-- Dashboard Header -->
-    <div class="border-4 border-dashed border-gray-200 rounded-lg p-8 mb-8">
-        <h2 class="text-3xl font-bold text-gray-900 mb-4">Dashboard</h2>
-        <p class="text-gray-600">Welcome to GoalPath - Your project management hub</p>
-    </div>
-
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                            <span class="text-white text-sm font-medium">P</span>
-                        </div>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Total Projects</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ stats.total_projects }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
+<div class="px-4 py-6 sm:px-0" x-data="dashboardData()">
+    <!-- Dashboard Header with Quick Actions -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+            <p class="text-gray-600">Welcome back! Here's what's happening with your projects.</p>
         </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                            <span class="text-white text-sm font-medium">T</span>
-                        </div>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Total Tasks</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ stats.total_tasks }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                            <span class="text-white text-sm font-medium">✓</span>
-                        </div>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Completed</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ stats.completed_tasks }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                            <span class="text-white text-sm font-medium">%</span>
-                        </div>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Completion Rate</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ stats.completion_rate }}%</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
+        <div class="mt-4 lg:mt-0 flex space-x-3">
+            <button hx-get="/modals/create-project" 
+                    hx-target="#modal-container"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                New Project
+            </button>
+            <button hx-get="/modals/create-task" 
+                    hx-target="#modal-container"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                New Task
+            </button>
         </div>
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Recent Projects -->
-        <div class="bg-white shadow rounded-lg">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Recent Projects</h3>
-            </div>
+    <!-- Real-time Statistics Cards -->
+    <div id="dashboard-stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        
+        <!-- Project Stats Card -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg card-hover">
             <div class="p-6">
-                {% if projects %}
-                    <div class="space-y-4">
-                        {% for project in projects %}
-                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-900">{{ project.name }}</h4>
-                                <p class="text-sm text-gray-500">{{ project.description[:100] }}...</p>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                    {% if project.status == 'active' %}bg-green-100 text-green-800{% endif %}
-                                    {% if project.status == 'paused' %}bg-yellow-100 text-yellow-800{% endif %}
-                                    {% if project.status == 'completed' %}bg-blue-100 text-blue-800{% endif %}">
-                                    {{ project.status }}
-                                </span>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    {% if project.priority == 'low' %}bg-gray-100 text-gray-800{% endif %}
-                                    {% if project.priority == 'medium' %}bg-blue-100 text-blue-800{% endif %}
-                                    {% if project.priority == 'high' %}bg-orange-100 text-orange-800{% endif %}
-                                    {% if project.priority == 'critical' %}bg-red-100 text-red-800{% endif %}">
-                                    {{ project.priority }}
-                                </span>
-                            </div>
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
                         </div>
-                        {% endfor %}
                     </div>
-                {% else %}
-                    <p class="text-gray-500 text-center py-8">No projects yet. Create your first project to get started!</p>
-                {% endif %}
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Active Projects</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ stats.total_projects }}</div>
+                                <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                                    <svg class="self-center flex-shrink-0 h-3 w-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="sr-only">Increased by</span>
+                                    +2.1%
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" 
+                             style="width: {{ (stats.total_projects / 10 * 100) if stats.total_projects else 0 }}%"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">of 10 planned projects</p>
+                </div>
             </div>
         </div>
 
-        <!-- Recent Tasks -->
-        <div class="bg-white shadow rounded-lg">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Recent Tasks</h3>
-            </div>
+        <!-- Task Completion Card -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg card-hover">
             <div class="p-6">
-                {% if recent_tasks %}
-                    <div class="space-y-4">
-                        {% for task in recent_tasks %}
-                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-900">{{ task.title }}</h4>
-                                <p class="text-xs text-gray-500">
-                                    {% if task.due_date %}Due: {{ task.due_date.strftime('%Y-%m-%d') }}{% endif %}
-                                </p>
-                            </div>
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                                {% if task.status == 'todo' %}bg-gray-100 text-gray-800{% endif %}
-                                {% if task.status == 'in_progress' %}bg-blue-100 text-blue-800{% endif %}
-                                {% if task.status == 'done' %}bg-green-100 text-green-800{% endif %}
-                                {% if task.status == 'blocked' %}bg-red-100 text-red-800{% endif %}">
-                                {{ task.status.replace('_', ' ').title() }}
-                            </span>
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                            </svg>
                         </div>
-                        {% endfor %}
                     </div>
-                {% else %}
-                    <p class="text-gray-500 text-center py-8">No tasks yet. Create your first task!</p>
-                {% endif %}
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Tasks Completed</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ stats.completed_tasks }}</div>
+                                <div class="ml-2 text-sm text-gray-500">of {{ stats.total_tasks }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-600 h-2 rounded-full progress-bar" 
+                             style="width: {{ stats.completion_rate }}%"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">{{ stats.completion_rate }}% completion rate</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goals Progress Card -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg card-hover">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Active Goals</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ active_goals|length if active_goals else 0 }}</div>
+                                <div class="ml-2 text-sm text-gray-500">in progress</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    {% if active_goals %}
+                        {% set avg_progress = (active_goals|sum(attribute='progress_percentage')|float/active_goals|length) %}
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-purple-600 h-2 rounded-full progress-bar" 
+                                 style="width: {{ avg_progress }}%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">{{ "%.1f"|format(avg_progress) }}% average progress</p>
+                    {% else %}
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-gray-400 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">No active goals</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Velocity Card -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg card-hover">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">This Week</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ stats.tasks_completed_this_week if stats.tasks_completed_this_week else 0 }}</div>
+                                <div class="ml-2 text-sm text-gray-500">tasks done</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <div class="flex items-center text-sm text-gray-500">
+                        <svg class="h-4 w-4 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        On track for weekly goal
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Active Goals -->
+    <!-- Active Goals with Progress Visualization -->
     {% if active_goals %}
-    <div class="mt-8 bg-white shadow rounded-lg">
-        <div class="px-6 py-4 border-b border-gray-200">
+    <div class="mb-8 bg-white shadow-sm rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h3 class="text-lg font-medium text-gray-900">Active Goals</h3>
+            <a href="/goals" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View All Goals</a>
         </div>
         <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for goal in active_goals %}
-                <div class="border border-gray-200 rounded-lg p-4">
-                    <h4 class="text-sm font-medium text-gray-900 mb-2">{{ goal.title }}</h4>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-gray-500">{{ goal.goal_type.replace('_', ' ').title() }}</span>
-                        <span class="text-xs font-medium text-blue-600">{{ goal.progress_percentage }}%</span>
+                <div class="border border-gray-200 rounded-lg p-6 hover:border-blue-300 transition-colors card-hover">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <h4 class="text-base font-medium text-gray-900 hover:text-blue-600">
+                                <a href="/goals/{{ goal.id }}">{{ goal.title }}</a>
+                            </h4>
+                            <p class="text-sm text-gray-500 mt-1">{{ goal.description[:80] }}...</p>
+                        </div>
+                        <span class="status-badge status-{{ goal.goal_type }}">
+                            {{ goal.goal_type.replace('_', ' ').title() }}
+                        </span>
                     </div>
-                    <div class="mt-2 bg-gray-200 rounded-full h-2">
-                        <div class="bg-blue-600 h-2 rounded-full" style="width: {{ goal.progress_percentage }}%"></div>
+                    
+                    <!-- Goal Progress Circle -->
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="relative w-20 h-20">
+                            <svg class="w-20 h-20 transform -rotate-90" viewBox="0 0 32 32">
+                                <circle cx="16" cy="16" r="14" stroke="#e5e7eb" stroke-width="2" fill="none"></circle>
+                                <circle cx="16" cy="16" r="14" 
+                                        stroke="#8b5cf6" 
+                                        stroke-width="2" 
+                                        fill="none"
+                                        stroke-dasharray="{{ ((goal.progress_percentage|float / 100) * 87.96)|round(2) }} 87.96"
+                                        stroke-linecap="round"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-lg font-semibold text-gray-900">{{ goal.progress_percentage|float|int }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        {% if goal.target_date %}
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            Target: {{ goal.target_date }}
+                        </div>
+                        {% endif %}
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            {{ goal.linked_projects }} linked projects
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -182,5 +236,226 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Projects with Enhanced UI -->
+        <div class="bg-white shadow-sm rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-900">Active Projects</h3>
+                <a href="/projects" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View All</a>
+            </div>
+            <div class="p-6">
+                {% if projects %}
+                    <div class="space-y-6" id="projects-container">
+                        {% for project in projects[:3] %}
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-medium text-gray-900 hover:text-blue-600">
+                                        <a href="/projects/{{ project.id }}">{{ project.name }}</a>
+                                    </h4>
+                                    <p class="text-sm text-gray-500 mt-1">{{ project.description[:100] }}...</p>
+                                    
+                                    <!-- Progress bar -->
+                                    <div class="mt-4">
+                                        <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
+                                            <span>Progress</span>
+                                            <span>{{ project.completion_percentage }}%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="bg-blue-600 h-2 rounded-full progress-bar" 
+                                                 style="width: {{ project.completion_percentage }}%"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Project stats -->
+                                    <div class="flex items-center space-x-4 mt-3 text-xs text-gray-500">
+                                        <span class="flex items-center">
+                                            <svg class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                            </svg>
+                                            {{ project.total_tasks }} tasks
+                                        </span>
+                                        <span class="flex items-center">
+                                            <svg class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
+                                            </svg>
+                                            {{ project.completed_tasks }} done
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="ml-4 flex flex-col items-end space-y-2">
+                                    <span class="status-badge status-{{ project.status }}">{{ project.status.title() }}</span>
+                                    <span class="status-badge priority-{{ project.priority }}">{{ project.priority.title() }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                        <h3 class="mt-4 text-lg font-medium text-gray-900">No projects yet</h3>
+                        <p class="mt-2 text-sm text-gray-500">Get started by creating your first project.</p>
+                        <button hx-get="/modals/create-project" 
+                                hx-target="#modal-container"
+                                class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                            Create Project
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Tasks with Quick Actions -->
+        <div class="bg-white shadow-sm rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-900">Recent Tasks</h3>
+                <a href="/tasks" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View All</a>
+            </div>
+            <div class="p-6 max-h-96 overflow-y-auto custom-scrollbar">
+                {% if recent_tasks %}
+                    <div class="space-y-3" id="recent-tasks-container">
+                        {% for task in recent_tasks[:8] %}
+                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors group">
+                            <div class="flex items-center flex-1">
+                                <input type="checkbox" 
+                                       {% if task.status == 'done' %}checked{% endif %}
+                                       hx-put="/htmx/tasks/{{ task.id }}/status?status={% if task.status == 'done' %}todo{% else %}done{% endif %}"
+                                       hx-target="closest div"
+                                       hx-swap="outerHTML"
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <div class="ml-3 flex-1">
+                                    <h4 class="text-sm font-medium text-gray-900 {% if task.status == 'done' %}line-through text-gray-500{% endif %}">
+                                        {{ task.title }}
+                                    </h4>
+                                    <div class="flex items-center space-x-3 mt-1">
+                                        {% if task.due_date %}
+                                        <p class="text-xs text-gray-500">Due: {{ task.due_date.strftime('%m/%d') }}</p>
+                                        {% endif %}
+                                        {% if task.estimated_hours %}
+                                        <p class="text-xs text-gray-500">{{ task.estimated_hours }}h</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="status-badge status-{{ task.status }}">
+                                    {{ task.status.replace('_', ' ').title() }}
+                                </span>
+                                <span class="status-badge priority-{{ task.priority }}">
+                                    {{ task.priority.title() }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        <h3 class="mt-4 text-lg font-medium text-gray-900">No tasks yet</h3>
+                        <p class="mt-2 text-sm text-gray-500">Create your first task to get started.</p>
+                        <button hx-get="/modals/create-task" 
+                                hx-target="#modal-container"
+                                class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                            Create Task
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Alpine.js Dashboard Data -->
+<script>
+function dashboardData() {
+    return {
+        stats: {
+            totalProjects: {{ stats.total_projects }},
+            totalTasks: {{ stats.total_tasks }},
+            completedTasks: {{ stats.completed_tasks }},
+            completionRate: {{ stats.completion_rate }}
+        },
+        
+        init() {
+            // Initialize dashboard components
+            this.initCharts();
+            // Real-time updates disabled to prevent infinite refresh loops
+            // this.startRealTimeUpdates();
+        },
+        
+        initCharts() {
+            // Initialize weekly progress chart
+            const ctx = document.getElementById('weeklyProgressChart');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Tasks Completed',
+                            data: [2, 4, 3, 5, 2, 3, 4],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 6
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+        },
+        
+        submitQuickTask(event) {
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            // Add default values
+            formData.append('task_type', 'task');
+            formData.append('status', 'todo');
+            
+            htmx.ajax('POST', '/api/tasks/', {
+                values: Object.fromEntries(formData),
+                target: '#recent-tasks-container',
+                swap: 'afterbegin'
+            }).then(() => {
+                form.reset();
+                showNotification('Success', 'Task created successfully!', 'success');
+            });
+        },
+        
+        startRealTimeUpdates() {
+            // Auto-refresh disabled to prevent navigation issues
+            // Update dashboard stats every 30 seconds
+            // setInterval(() => {
+            //     htmx.ajax('GET', '/api/dashboard/stats', {
+            //         target: '#dashboard-stats',
+            //         swap: 'innerHTML'
+            //     });
+            // }, 30000);
+            console.log('Real-time updates disabled for better navigation experience');
+        }
+    };
+}
+</script>
 {% endblock %}

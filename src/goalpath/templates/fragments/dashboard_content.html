@@ -1,0 +1,191 @@
+<!-- Dashboard Content Fragment -->
+<div class="px-4 py-6 sm:px-0" x-data="dashboardData()">
+    <!-- Dashboard Header with Quick Actions -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+            <p class="text-gray-600">Welcome back! Here's what's happening with your projects.</p>
+        </div>
+        <div class="mt-4 lg:mt-0 flex space-x-3">
+            <button hx-get="/modals/create-project" 
+                    hx-target="#modal-container"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                New Project
+            </button>
+            <button hx-get="/modals/create-task" 
+                    hx-target="#modal-container"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                New Task
+            </button>
+        </div>
+    </div>
+
+    <!-- Real-time Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        
+        <!-- Project Stats Card -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg card-hover">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Active Projects</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ stats.total_projects }}</div>
+                                <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                                    <svg class="self-center flex-shrink-0 h-3 w-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="sr-only">Increased by</span>
+                                    +2.1%
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" 
+                             style="width: {{ (stats.total_projects / 10 * 100) if stats.total_projects else 0 }}%"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">of 10 planned projects</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Completion Card -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg card-hover">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Tasks Completed</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ stats.completed_tasks }}</div>
+                                <div class="ml-2 text-sm text-gray-500">of {{ stats.total_tasks }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-600 h-2 rounded-full progress-bar" 
+                             style="width: {{ stats.completion_rate }}%"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">{{ stats.completion_rate }}% completion rate</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goals Progress Card -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg card-hover">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Active Goals</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ active_goals|length if active_goals else 0 }}</div>
+                                <div class="ml-2 text-sm text-gray-500">in progress</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    {% if active_goals %}
+                        {% set avg_progress = (active_goals|sum(attribute='progress_percentage')|float/active_goals|length) %}
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-purple-600 h-2 rounded-full progress-bar" 
+                                 style="width: {{ avg_progress }}%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">{{ "%.1f"|format(avg_progress) }}% average progress</p>
+                    {% else %}
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-gray-400 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">No active goals</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Velocity Card -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg card-hover">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">This Week</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ stats.tasks_completed_this_week if stats.tasks_completed_this_week else 0 }}</div>
+                                <div class="ml-2 text-sm text-gray-500">tasks done</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <div class="flex items-center text-sm text-gray-500">
+                        <svg class="h-4 w-4 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        On track for weekly goal
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rest of dashboard content... -->
+    <!-- Active Goals, Recent Projects, Recent Tasks sections from original dashboard.html -->
+</div>
+
+<script>
+function dashboardData() {
+    return {
+        stats: {
+            totalProjects: {{ stats.total_projects }},
+            totalTasks: {{ stats.total_tasks }},
+            completedTasks: {{ stats.completed_tasks }},
+            completionRate: {{ stats.completion_rate }}
+        },
+        
+        init() {
+            console.log('Dashboard content fragment initialized');
+        }
+    };
+}
+</script>

@@ -1,0 +1,52 @@
+<!-- Task Item Fragment for Dashboard -->
+<div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors group"
+     x-data="{ show: true }"
+     x-show="show"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0 transform translate-y-2"
+     x-transition:enter-end="opacity-100 transform translate-y-0">
+    <div class="flex items-center flex-1">
+        <input type="checkbox" 
+               {% if task.status == 'done' %}checked{% endif %}
+               hx-put="/htmx/tasks/{{ task.id }}/status?status={% if task.status == 'done' %}todo{% else %}done{% endif %}"
+               hx-target="closest div"
+               hx-swap="outerHTML"
+               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+        <div class="ml-3 flex-1">
+            <h4 class="text-sm font-medium text-gray-900 {% if task.status == 'done' %}line-through text-gray-500{% endif %}">
+                {{ task.title }}
+            </h4>
+            <div class="flex items-center space-x-3 mt-1">
+                {% if task.project_id and task.project %}
+                <p class="text-xs text-blue-600">{{ task.project.name }}</p>
+                {% endif %}
+                {% if task.due_date %}
+                <p class="text-xs text-gray-500">Due: {{ task.due_date.strftime('%m/%d') }}</p>
+                {% endif %}
+                {% if task.estimated_hours %}
+                <p class="text-xs text-gray-500">{{ task.estimated_hours }}h</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="flex items-center space-x-2">
+        <span class="status-badge status-{{ task.status }}">
+            {{ task.status.replace('_', ' ').title() }}
+        </span>
+        <span class="status-badge priority-{{ task.priority }}">
+            {{ task.priority.title() }}
+        </span>
+        
+        <!-- Quick actions -->
+        <div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button hx-get="/modals/edit-task/{{ task.id }}" 
+                    hx-target="#modal-container"
+                    class="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                    title="Edit task">
+                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>

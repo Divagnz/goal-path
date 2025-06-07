@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - GoalPath{% endblock %}
+
+{% block content %}
+<!-- Project Detail Page Content -->
+<div class="px-4 py-6 sm:px-0" x-data="projectDetailData()">
+    <!-- Include the project detail fragment content -->
+    {% include "fragments/project_detail_content.html" %}
+</div>
+
+<script>
+function projectDetailData() {
+    return {
+        taskView: 'list',
+        
+        init() {
+            console.log('Project detail page initialized');
+        },
+        
+        toggleTaskStatus(taskId, currentStatus) {
+            const newStatus = currentStatus === 'done' ? 'todo' : 'done';
+            htmx.ajax('PUT', `/htmx/tasks/${taskId}/status?status=${newStatus}`, {
+                target: `#task-${taskId}`,
+                swap: 'outerHTML'
+            });
+        }
+    };
+}
+</script>
+{% endblock %}

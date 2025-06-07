@@ -1,0 +1,22 @@
+<!-- Error Fragment for HTMX -->
+<div class="px-4 py-6 sm:px-0">
+    <div class="text-center py-12">
+        <svg class="mx-auto h-16 w-16 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <h2 class="mt-4 text-2xl font-bold text-gray-900">{{ error }}</h2>
+        <p class="mt-2 text-gray-600">The item you're looking for could not be found.</p>
+        <div class="mt-6">
+            <a href="/projects" 
+               hx-get="/projects"
+               hx-target="#main-content"
+               hx-push-url="true"
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Back to Projects
+            </a>
+        </div>
+    </div>
+</div>

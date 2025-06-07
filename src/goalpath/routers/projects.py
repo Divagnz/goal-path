@@ -1,73 +1,24 @@
 """
-Projects API Router - Mock/Fixed Responses
-This module contains fixed responses for testing API structure
-TODO: Replace with actual database logic
+Projects API Router - Database Implementation
+Full CRUD operations for projects with statistics and filtering
 """
 
 from datetime import datetime, date
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from ..schemas import (
     ProjectCreate, ProjectUpdate, ProjectResponse, ProjectFilters,
     MessageResponse, ErrorResponse, PaginatedResponse
 )
 from ..database import get_db
+from ..models import Project
+from ..db_utils import QueryUtils, TransactionManager
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
-# Mock data for testing
-MOCK_PROJECTS = [
-    {
-        "id": "proj-001",
-        "name": "Website Redesign",
-        "description": "Complete overhaul of company website with modern design and improved UX",
-        "status": "active",
-        "priority": "high",
-        "start_date": "2025-01-15",
-        "target_end_date": "2025-08-31",
-        "actual_end_date": None,
-        "created_at": "2025-01-15T10:00:00Z",
-        "updated_at": "2025-06-03T15:30:00Z",
-        "created_by": "user_001",
-        "total_tasks": 15,
-        "completed_tasks": 8,
-        "completion_percentage": 53.3
-    },
-    {
-        "id": "proj-002", 
-        "name": "Mobile App Development",
-        "description": "Native iOS and Android applications for customer portal",
-        "status": "active",
-        "priority": "critical",
-        "start_date": "2025-02-01",
-        "target_end_date": "2025-12-15",
-        "actual_end_date": None,
-        "created_at": "2025-02-01T09:00:00Z",
-        "updated_at": "2025-06-03T12:15:00Z",
-        "created_by": "user_002",
-        "total_tasks": 28,
-        "completed_tasks": 5,
-        "completion_percentage": 17.9
-    },
-    {
-        "id": "proj-003",
-        "name": "Database Migration",
-        "description": "Migrate from MySQL to PostgreSQL for better performance",
-        "status": "completed",
-        "priority": "medium",
-        "start_date": "2025-03-01",
-        "target_end_date": "2025-06-30",
-        "actual_end_date": "2025-05-20",
-        "created_at": "2025-03-01T08:00:00Z",
-        "updated_at": "2025-05-20T16:45:00Z",
-        "created_by": "user_003",
-        "total_tasks": 12,
-        "completed_tasks": 12,
-        "completion_percentage": 100.0
-    }
-]
 
 @router.get("/", response_model=List[ProjectResponse], summary="List all projects")
 async def list_projects(
@@ -81,41 +32,28 @@ async def list_projects(
     """
     Get all projects with optional filtering and pagination.
     
-    **Fixed Response**: Returns mock project data for testing.
-    TODO: Implement actual database queries with filtering.
+    **Database Implementation**: Queries projects with calculated statistics.
     """
     
-    # TODO: Replace with actual database query
-    # Example of what the real implementation will look like:
-    # query = db.query(Project)
-    # if status:
-    #     query = query.filter(Project.status == status)
-    # if priority:
-    #     query = query.filter(Project.priority == priority)
-    # if search:
-    #     query = query.filter(Project.name.contains(search))
-    # projects = query.offset((page-1)*size).limit(size).all()
-    
-    # For now, return filtered mock data
-    filtered_projects = MOCK_PROJECTS.copy()
-    
-    if status:
-        filtered_projects = [p for p in filtered_projects if p["status"] == status]
-    if priority:
-        filtered_projects = [p for p in filtered_projects if p["priority"] == priority]
-    if search:
-        search_lower = search.lower()
-        filtered_projects = [
-            p for p in filtered_projects 
-            if search_lower in p["name"].lower() or search_lower in (p["description"] or "").lower()
-        ]
-    
-    # Simulate pagination
-    start_idx = (page - 1) * size
-    end_idx = start_idx + size
-    paginated_projects = filtered_projects[start_idx:end_idx]
-    
-    return [ProjectResponse(**project) for project in paginated_projects]
+    try:
+        # Use QueryUtils for database operations with statistics
+        projects_data = QueryUtils.get_projects_with_stats(
+            db=db,
+            status=status,
+            priority=priority,
+            search=search,
+            page=page,
+            size=size
+        )
+        
+        return [ProjectResponse(**project) for project in projects_data]
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving projects: {str(e)}"
+        )
+
 
 @router.get("/{project_id}", response_model=ProjectResponse, summary="Get project by ID")
 async def get_project(
@@ -123,28 +61,30 @@ async def get_project(
     db: Session = Depends(get_db)
 ) -> ProjectResponse:
     """
-    Get a specific project by ID.
+    Get a specific project by ID with detailed statistics.
     
-    **Fixed Response**: Returns mock project data for testing.
-    TODO: Implement actual database lookup.
+    **Database Implementation**: Retrieves project with calculated stats.
     """
     
-    # TODO: Replace with actual database query
-    # project = db.query(Project).filter(Project.id == project_id).first()
-    # if not project:
-    #     raise HTTPException(status_code=404, detail="Project not found")
-    # return project
-    
-    # For now, return mock data
-    project = next((p for p in MOCK_PROJECTS if p["id"] == project_id), None)
-    
-    if not project:
+    try:
+        project_data = QueryUtils.get_project_with_stats(db, project_id)
+        
+        if not project_data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Project with ID {project_id} not found"
+            )
+        
+        return ProjectResponse(**project_data)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(
-            status_code=404, 
-            detail=f"Project with ID {project_id} not found"
+            status_code=500,
+            detail=f"Error retrieving project: {str(e)}"
         )
-    
-    return ProjectResponse(**project)
+
 
 @router.post("/", response_model=ProjectResponse, status_code=201, summary="Create new project")
 async def create_project(
@@ -154,34 +94,39 @@ async def create_project(
     """
     Create a new project.
     
-    **Fixed Response**: Returns mock created project for testing.
-    TODO: Implement actual database creation.
+    **Database Implementation**: Creates project in database with validation.
     """
     
-    # TODO: Replace with actual database creation
-    # new_project = Project(**project.dict())
-    # db.add(new_project)
-    # db.commit()
-    # db.refresh(new_project)
-    # return new_project
-    
-    # For now, return mock created project
-    new_project_data = {
-        "id": f"proj-{len(MOCK_PROJECTS) + 1:03d}",
-        **project.dict(),
-        "actual_end_date": None,
-        "created_at": datetime.now().isoformat() + "Z",
-        "updated_at": datetime.now().isoformat() + "Z",
-        "created_by": "current_user",
-        "total_tasks": 0,
-        "completed_tasks": 0,
-        "completion_percentage": 0.0
-    }
-    
-    # Add to mock data for session persistence
-    MOCK_PROJECTS.append(new_project_data)
-    
-    return ProjectResponse(**new_project_data)
+    try:
+        with TransactionManager(db) as db_session:
+            # Create new project instance
+            project_data = project.model_dump()
+            
+            # Add created_by if not provided (would come from auth in real app)
+            if "created_by" not in project_data or not project_data["created_by"]:
+                project_data["created_by"] = "system"
+            
+            new_project = Project(**project_data)
+            db_session.add(new_project)
+            db_session.commit()
+            db_session.refresh(new_project)
+            
+            # Get project with statistics
+            project_with_stats = QueryUtils.get_project_with_stats(db_session, new_project.id)
+            
+            return ProjectResponse(**project_with_stats)
+            
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Project creation failed: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error creating project: {str(e)}"
+        )
+
 
 @router.put("/{project_id}", response_model=ProjectResponse, summary="Update project")
 async def update_project(
@@ -192,40 +137,46 @@ async def update_project(
     """
     Update an existing project.
     
-    **Fixed Response**: Returns mock updated project for testing.
-    TODO: Implement actual database update.
+    **Database Implementation**: Updates project in database with validation.
     """
     
-    # TODO: Replace with actual database update
-    # project = db.query(Project).filter(Project.id == project_id).first()
-    # if not project:
-    #     raise HTTPException(status_code=404, detail="Project not found")
-    # 
-    # for field, value in project_update.dict(exclude_unset=True).items():
-    #     setattr(project, field, value)
-    # 
-    # db.commit()
-    # db.refresh(project)
-    # return project
-    
-    # For now, update mock data
-    project_idx = next((i for i, p in enumerate(MOCK_PROJECTS) if p["id"] == project_id), None)
-    
-    if project_idx is None:
+    try:
+        with TransactionManager(db) as db_session:
+            # Find existing project
+            project = db_session.query(Project).filter(Project.id == project_id).first()
+            
+            if not project:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Project with ID {project_id} not found"
+                )
+            
+            # Update fields from request
+            update_data = project_update.model_dump(exclude_unset=True)
+            for field, value in update_data.items():
+                setattr(project, field, value)
+            
+            db_session.commit()
+            db_session.refresh(project)
+            
+            # Get project with updated statistics
+            project_with_stats = QueryUtils.get_project_with_stats(db_session, project.id)
+            
+            return ProjectResponse(**project_with_stats)
+            
+    except HTTPException:
+        raise
+    except IntegrityError as e:
         raise HTTPException(
-            status_code=404, 
-            detail=f"Project with ID {project_id} not found"
+            status_code=400,
+            detail=f"Project update failed: {str(e)}"
         )
-    
-    # Update the mock project
-    project_data = MOCK_PROJECTS[project_idx].copy()
-    update_data = project_update.dict(exclude_unset=True)
-    project_data.update(update_data)
-    project_data["updated_at"] = datetime.now().isoformat() + "Z"
-    
-    MOCK_PROJECTS[project_idx] = project_data
-    
-    return ProjectResponse(**project_data)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error updating project: {str(e)}"
+        )
+
 
 @router.delete("/{project_id}", response_model=MessageResponse, summary="Delete project")
 async def delete_project(
@@ -235,30 +186,36 @@ async def delete_project(
     """
     Delete a project.
     
-    **Fixed Response**: Returns success message for testing.
-    TODO: Implement actual database deletion with cascade.
+    **Database Implementation**: Deletes project with cascade handling.
     """
     
-    # TODO: Replace with actual database deletion
-    # project = db.query(Project).filter(Project.id == project_id).first()
-    # if not project:
-    #     raise HTTPException(status_code=404, detail="Project not found")
-    # 
-    # db.delete(project)
-    # db.commit()
-    
-    # For now, remove from mock data
-    project_idx = next((i for i, p in enumerate(MOCK_PROJECTS) if p["id"] == project_id), None)
-    
-    if project_idx is None:
+    try:
+        with TransactionManager(db) as db_session:
+            # Find existing project
+            project = db_session.query(Project).filter(Project.id == project_id).first()
+            
+            if not project:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Project with ID {project_id} not found"
+                )
+            
+            project_name = project.name
+            
+            # Delete project (cascade will handle related entities)
+            db_session.delete(project)
+            db_session.commit()
+            
+            return MessageResponse(message=f"Project '{project_name}' deleted successfully")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(
-            status_code=404, 
-            detail=f"Project with ID {project_id} not found"
+            status_code=500,
+            detail=f"Error deleting project: {str(e)}"
         )
-    
-    removed_project = MOCK_PROJECTS.pop(project_idx)
-    
-    return MessageResponse(message=f"Project '{removed_project['name']}' deleted successfully")
+
 
 @router.get("/{project_id}/statistics", summary="Get project statistics")
 async def get_project_statistics(
@@ -268,50 +225,90 @@ async def get_project_statistics(
     """
     Get detailed statistics for a project.
     
-    **Fixed Response**: Returns mock statistics for testing.
-    TODO: Implement actual database aggregation queries.
+    **Database Implementation**: Calculates real statistics from database.
     """
     
-    # TODO: Replace with actual database aggregation
-    # This would involve complex queries joining tasks, calculating progress, etc.
-    
-    project = next((p for p in MOCK_PROJECTS if p["id"] == project_id), None)
-    
-    if not project:
-        raise HTTPException(
-            status_code=404, 
-            detail=f"Project with ID {project_id} not found"
-        )
-    
-    # Mock detailed statistics
-    return {
-        "project_id": project_id,
-        "project_name": project["name"],
-        "total_tasks": project["total_tasks"],
-        "completed_tasks": project["completed_tasks"],
-        "in_progress_tasks": 4,
-        "blocked_tasks": 1,
-        "overdue_tasks": 2,
-        "completion_percentage": project["completion_percentage"],
-        "estimated_hours": 320.5,
-        "actual_hours": 156.75,
-        "remaining_hours": 163.75,
-        "days_since_start": 139,
-        "days_until_deadline": 89,
-        "velocity": {
-            "tasks_per_week": 1.2,
-            "hours_per_week": 8.9
-        },
-        "recent_activity": [
-            {
-                "date": "2025-06-03",
-                "action": "task_completed",
-                "description": "Completed 'User Interface Design'"
+    try:
+        # First verify project exists
+        project = db.query(Project).filter(Project.id == project_id).first()
+        if not project:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Project with ID {project_id} not found"
+            )
+        
+        # Get detailed project statistics
+        project_stats = QueryUtils.get_project_with_stats(db, project_id)
+        
+        # Calculate additional statistics
+        from sqlalchemy import func
+        from ..models import Task
+        
+        # Get task statistics by status
+        task_stats = db.query(
+            Task.status,
+            func.count(Task.id).label('count'),
+            func.coalesce(func.sum(Task.estimated_hours), 0).label('estimated_hours'),
+            func.coalesce(func.sum(Task.actual_hours), 0).label('actual_hours')
+        ).filter(Task.project_id == project_id).group_by(Task.status).all()
+        
+        # Calculate time-based statistics
+        total_estimated_hours = sum(float(stat.estimated_hours or 0) for stat in task_stats)
+        total_actual_hours = sum(float(stat.actual_hours or 0) for stat in task_stats)
+        
+        # Calculate project timeline
+        days_since_start = None
+        days_until_deadline = None
+        
+        if project.start_date:
+            days_since_start = (date.today() - project.start_date).days
+        
+        if project.target_end_date:
+            days_until_deadline = (project.target_end_date - date.today()).days
+        
+        # Build comprehensive statistics response
+        statistics = {
+            "project_id": project_id,
+            "project_name": project.name,
+            "total_tasks": project_stats["total_tasks"],
+            "completed_tasks": project_stats["completed_tasks"],
+            "in_progress_tasks": project_stats["in_progress_tasks"],
+            "blocked_tasks": project_stats["blocked_tasks"],
+            "completion_percentage": project_stats["completion_percentage"],
+            "estimated_hours": total_estimated_hours,
+            "actual_hours": total_actual_hours,
+            "remaining_hours": max(0, total_estimated_hours - total_actual_hours),
+            "days_since_start": days_since_start,
+            "days_until_deadline": days_until_deadline,
+            "velocity": {
+                "tasks_per_week": round(project_stats["completed_tasks"] / max(1, (days_since_start or 1) / 7), 1),
+                "hours_per_week": round(total_actual_hours / max(1, (days_since_start or 1) / 7), 1)
             },
-            {
-                "date": "2025-06-02", 
-                "action": "task_created",
-                "description": "Created 'Database Integration'"
+            "timeline": {
+                "start_date": project.start_date.isoformat() if project.start_date else None,
+                "target_end_date": project.target_end_date.isoformat() if project.target_end_date else None,
+                "actual_end_date": project.actual_end_date.isoformat() if project.actual_end_date else None,
+                "is_overdue": (
+                    project.target_end_date and 
+                    date.today() > project.target_end_date and 
+                    project.status != "completed"
+                ) if project.target_end_date else False
+            },
+            "task_breakdown": {
+                stat.status: {
+                    "count": stat.count,
+                    "estimated_hours": float(stat.estimated_hours or 0),
+                    "actual_hours": float(stat.actual_hours or 0)
+                } for stat in task_stats
             }
-        ]
-    }
+        }
+        
+        return statistics
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error calculating project statistics: {str(e)}"
+        )
