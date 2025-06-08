@@ -7,35 +7,157 @@ on:
     branches: [ main, develop ]
 
 env:
-  PYTHON_VERSION: "3.12.11"
+  UV_CACHE_DIR: /tmp/.uv-cache
 
 jobs:
   test:
-    name: Run Tests
+    name: Run Tests and Quality Checks
     runs-on: [self-hosted, linux]
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v3
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+        
+    - name: Set up Python ${{ matrix.python-version }}
+      run: uv python install ${{ matrix.python-version }}
+      
+    - name: Create virtual environment
+      run: uv venv --python ${{ matrix.python-version }}
         
     - name: Install dependencies
       run: |
-        uv sync --dev
+        uv sync --dev --frozen
         
-    - name: Run quality checks and tests
+    - name: Run code quality checks
       run: |
-        uv run ruff check . || true
-        uv run black --check . || true
-        uv run pytest scripts/testing/ -v --cov=src --cov-report=xml
+        echo "Running code quality checks..."
+        uv run ruff check . --output-format=github || true
+        uv run black --check . --diff || true
+        uv run isort --check-only --diff . || true
         
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
-      if: success()
+    - name: Run type checking
+      run: |
+        echo "Running type checking..."
+        uv run mypy src/goalpath --show-error-codes || true        
+    - name: Initialize test database
+      run: |
+        echo "Setting up test database..."
+        uv run python -c "
+        from src.goalpath.database import DatabaseManager
+        db = DatabaseManager('sqlite:///test.db')
+        db.create_tables()
+        print('Test database initialized')
+        "
+        
+    - name: Run tests with coverage
+      run: |
+        echo "Running test suite..."
+        uv run pytest scripts/testing/ tests/ -v \
+          --cov=src \
+          --cov-report=xml \
+          --cov-report=term-missing \
+          --cov-fail-under=80
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      if: success() && matrix.python-version == '3.12'
       with:
         file: ./coverage.xml
         fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
+        
+    - name: Run integration tests
+      run: |
+        echo "Running integration tests..."
+        uv run python scripts/testing/test_comprehensive.py || true
+        uv run python scripts/testing/test_database_apis.py || true
+        
+    - name: Performance benchmark
+      if: matrix.python-version == '3.12'
+      run: |
+        echo "Running performance benchmarks..."
+        time uv run python -c "
+        import time
+        from src.goalpath.main import app
+        from fastapi.testclient import TestClient
+        
+        client = TestClient(app)
+        start = time.time()
+        for i in range(10):
+            response = client.get('/')
+            assert response.status_code == 200
+        end = time.time()
+        print(f'Average response time: {(end-start)/10:.3f}s')
+        "
+        
+    - name: Cache cleanup
+      if: always()
+      run: |
+        echo "Cleaning up cache..."
+        du -sh $UV_CACHE_DIR || true
+        find $UV_CACHE_DIR -type f -atime +7 -delete 2>/dev/null || true        
+    - name: Initialize test database
+      run: |
+        echo "Setting up test database..."
+        uv run python -c "
+        from src.goalpath.database import DatabaseManager
+        db = DatabaseManager('sqlite:///test.db')
+        db.create_tables()
+        print('Test database initialized')
+        "
+        
+    - name: Run tests with coverage
+      run: |
+        echo "Running test suite..."
+        uv run pytest scripts/testing/ tests/ -v \
+          --cov=src \
+          --cov-report=xml \
+          --cov-report=term-missing \
+          --cov-fail-under=80
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      if: success() && matrix.python-version == '3.12'
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}        
+    - name: Run integration tests
+      run: |
+        echo "Running integration tests..."
+        uv run python scripts/testing/test_comprehensive.py || true
+        uv run python scripts/testing/test_database_apis.py || true
+        
+    - name: Performance benchmark
+      if: matrix.python-version == '3.12'
+      run: |
+        echo "Running performance benchmarks..."
+        time uv run python -c "
+        import time
+        from src.goalpath.main import app
+        from fastapi.testclient import TestClient
+        
+        client = TestClient(app)
+        start = time.time()
+        for i in range(10):
+            response = client.get('/')
+            assert response.status_code == 200
+        end = time.time()
+        print(f'Average response time: {(end-start)/10:.3f}s')
+        "
+        
+    - name: Cache cleanup
+      if: always()
+      run: |
+        echo "Cleaning up cache..."
+        du -sh $UV_CACHE_DIR || true
+        find $UV_CACHE_DIR -type f -atime +7 -delete 2>/dev/null || true

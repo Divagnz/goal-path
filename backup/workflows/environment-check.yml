@@ -1,0 +1,52 @@
+name: Environment Check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ feature/cicd-nomad-setup ]
+
+jobs:
+  check-environment:
+    name: Check Runner Environment
+    runs-on: [self-hosted, linux]
+    
+    steps:
+    - name: Check Python version
+      run: |
+        python3 --version
+        python3 -c "import sys; print(f'Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')"
+        which python3
+        
+    - name: Validate Python version
+      run: |
+        EXPECTED="3.12.11"
+        ACTUAL=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')")
+        echo "Expected: Python $EXPECTED"
+        echo "Actual: Python $ACTUAL"
+        if [ "$ACTUAL" = "$EXPECTED" ]; then
+          echo "✅ Python version matches expected version"
+        else
+          echo "⚠️  Python version mismatch - workflows configured for $EXPECTED but runner has $ACTUAL"
+        fi
+        
+    - name: Check uv installation
+      run: |
+        uv --version
+        which uv
+        
+    - name: Check Docker
+      run: |
+        docker --version
+        docker info | head -10
+        
+    - name: Check Nomad connectivity
+      run: |
+        curl -s http://192.168.0.174:4646/v1/status/leader || echo "Nomad not reachable"
+        
+    - name: System info
+      run: |
+        echo "OS: $(lsb_release -d | cut -f2)"
+        echo "Kernel: $(uname -r)"
+        echo "Architecture: $(uname -m)"
+        echo "CPU cores: $(nproc)"
+        echo "Memory: $(free -h | grep '^Mem:' | awk '{print $2}')"

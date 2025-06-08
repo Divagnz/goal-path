@@ -6,7 +6,10 @@ on:
   pull_request:
     branches: [ main, develop ]
   schedule:
-    - cron: '0 6 * * 1'
+    - cron: '0 6 * * 1'  # Weekly Monday 6 AM UTC
+
+env:
+  UV_CACHE_DIR: /tmp/.uv-cache
 
 jobs:
   security-scan:
@@ -17,29 +20,72 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v3
       with:
-        python-version: "3.12.11"
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
         
-    - name: Install security tools
+    - name: Set up Python
+      run: uv python install 3.12
+      
+    - name: Create virtual environment
+      run: uv venv --python 3.12
+        
+    - name: Install project dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install bandit safety semgrep
+        uv sync --frozen
         
-    - name: Run security scans
+    - name: Install security tools via uv
       run: |
-        bandit -r src/ -f json -o bandit-report.json || true
-        safety check --json --output safety-report.json || true
-        semgrep --config=auto src/ --json -o semgrep-report.json || true
-        
-    - name: Display results
+        echo "Installing security tools..."
+        uv add --dev bandit safety semgrep ruff        
+    - name: Run dependency vulnerability scan
       run: |
-        echo "Security scan completed. Check artifacts for detailed reports."
-        bandit -r src/ -f txt || true
+        echo "Scanning dependencies for vulnerabilities..."
+        uv run safety check --json --output safety-report.json || true
+        uv run safety check --short-report || true
         
+    - name: Run static security analysis
+      run: |
+        echo "Running static security analysis..."
+        uv run bandit -r src/ -f json -o bandit-report.json || true
+        uv run bandit -r src/ -f txt || true
+        
+    - name: Run advanced security scanning
+      run: |
+        echo "Running Semgrep security analysis..."
+        uv run semgrep --config=auto src/ --json -o semgrep-report.json || true
+        uv run semgrep --config=auto src/ --text || true
+        
+    - name: Run additional linting with security focus
+      run: |
+        echo "Running security-focused linting..."
+        uv run ruff check . --select=S,B,PIE,T10 --output-format=github || true
+        
+    - name: Generate security summary
+      run: |
+        echo "## Security Scan Summary" > security-summary.md
+        echo "Generated: $(date)" >> security-summary.md
+        echo "" >> security-summary.md
+        
+        if [ -f bandit-report.json ]; then
+          BANDIT_ISSUES=$(jq '.results | length' bandit-report.json || echo "0")
+          echo "- Bandit Issues: $BANDIT_ISSUES" >> security-summary.md
+        fi
+        
+        if [ -f safety-report.json ]; then
+          echo "- Safety scan completed" >> security-summary.md
+        fi
+        
+        if [ -f semgrep-report.json ]; then
+          SEMGREP_ISSUES=$(jq '.results | length' semgrep-report.json || echo "0")
+          echo "- Semgrep Issues: $SEMGREP_ISSUES" >> security-summary.md
+        fi
+        
+        cat security-summary.md        
     - name: Upload security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-reports-${{ github.sha }}
@@ -47,3 +93,11 @@ jobs:
           bandit-report.json
           safety-report.json
           semgrep-report.json
+          security-summary.md
+        retention-days: 30
+        
+    - name: Security scan notification
+      if: failure()
+      run: |
+        echo "⚠️ Security scan found issues. Check the artifacts for detailed reports."
+        echo "Reports available in the security-reports-${{ github.sha }} artifact."

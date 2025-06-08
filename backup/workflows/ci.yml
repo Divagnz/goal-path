@@ -1,0 +1,33 @@
+name: CI - Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: [self-hosted, linux]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        uv sync --dev
+        
+    - name: Run quality checks and tests
+      run: |
+        uv run ruff check . || true
+        uv run black --check . || true
+        uv run pytest scripts/testing/ -v --cov=src --cov-report=xml
+        
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      if: success()
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
