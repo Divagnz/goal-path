@@ -177,17 +177,22 @@ class TestDatabaseIntegration:
         # Create two separate sessions
         session1 = test_db_manager.get_sync_session()
         session2 = test_db_manager.get_sync_session()
+        
+        project1_id = None
+        project2_id = None
 
         try:
             # Create project in session1
             project1 = Project(name="Session1 Project")
             session1.add(project1)
             session1.commit()
+            project1_id = project1.id
 
             # Create project in session2
             project2 = Project(name="Session2 Project")
             session2.add(project2)
             session2.commit()
+            project2_id = project2.id
 
             # Verify each session can see its own data
             s1_projects = session1.query(Project).all()
@@ -198,5 +203,17 @@ class TestDatabaseIntegration:
             assert len(s2_projects) >= 2
 
         finally:
-            session1.close()
-            session2.close()
+            # Clean up the test data
+            try:
+                if project1_id:
+                    session1.query(Project).filter(Project.id == project1_id).delete()
+                    session1.commit()
+                if project2_id:
+                    session2.query(Project).filter(Project.id == project2_id).delete()
+                    session2.commit()
+            except Exception:
+                session1.rollback()
+                session2.rollback()
+            finally:
+                session1.close()
+                session2.close()

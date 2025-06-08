@@ -48,6 +48,7 @@ def test_db_session(test_db_manager):
                 TaskAttachment,
                 TaskComment,
             )
+            from src.goalpath.models import Sprint, SprintTask
 
             extended_models_available = True
         except ImportError:
@@ -56,6 +57,8 @@ def test_db_session(test_db_manager):
         # Delete relationship tables first
         session.query(GoalProject).delete()
         session.query(TaskDependency).delete()
+        if extended_models_available:
+            session.query(SprintTask).delete()
 
         # Delete extended model data if available
         if extended_models_available:
@@ -65,15 +68,30 @@ def test_db_session(test_db_manager):
             session.query(Issue).delete()
             session.query(ProjectContext).delete()
             session.query(ScheduleEvent).delete()
+            session.query(Sprint).delete()
 
         # Delete main tables
         session.query(Task).delete()
         session.query(Goal).delete()
         session.query(Project).delete()
 
+        # Force commit all deletions
         session.commit()
-    except Exception:
+        
+        # Verify cleanup worked
+        remaining_projects = session.query(Project).count()
+        if remaining_projects > 0:
+            print(f"Warning: {remaining_projects} projects still exist after cleanup")
+            
+    except Exception as e:
+        print(f"Cleanup error: {e}")
         session.rollback()
+        # Force delete all projects as fallback
+        try:
+            session.query(Project).delete()
+            session.commit()
+        except Exception:
+            session.rollback()
     finally:
         session.close()
 
