@@ -22,12 +22,12 @@ def test_db_manager():
     # Use in-memory SQLite for tests
     test_db_url = "sqlite:///:memory:"
     db_manager = DatabaseManager(test_db_url)
-    
+
     # Create all tables
     db_manager.create_tables()
-    
+
     yield db_manager
-    
+
     # Cleanup is automatic with in-memory database
 
 
@@ -35,29 +35,33 @@ def test_db_manager():
 def test_db_session(test_db_manager):
     """Create a test database session with automatic rollback"""
     session = test_db_manager.get_sync_session()
-    
+
     yield session
-    
+
     # Clean up by removing all data
     try:
         # Import only the models we know exist
-        from src.goalpath.models import (
-            GoalProject, TaskDependency, Task, Goal, Project
-        )
-        
+        from src.goalpath.models import GoalProject, TaskDependency, Task, Goal, Project
+
         # Try to import extended models if they exist
         try:
             from src.goalpath.models.extended import (
-                TaskComment, TaskAttachment, Reminder, Issue, ProjectContext, ScheduleEvent
+                TaskComment,
+                TaskAttachment,
+                Reminder,
+                Issue,
+                ProjectContext,
+                ScheduleEvent,
             )
+
             extended_models_available = True
         except ImportError:
             extended_models_available = False
-        
+
         # Delete relationship tables first
         session.query(GoalProject).delete()
         session.query(TaskDependency).delete()
-        
+
         # Delete extended model data if available
         if extended_models_available:
             session.query(TaskComment).delete()
@@ -66,12 +70,12 @@ def test_db_session(test_db_manager):
             session.query(Issue).delete()
             session.query(ProjectContext).delete()
             session.query(ScheduleEvent).delete()
-        
+
         # Delete main tables
         session.query(Task).delete()
         session.query(Goal).delete()
         session.query(Project).delete()
-        
+
         session.commit()
     except Exception:
         session.rollback()
@@ -82,18 +86,18 @@ def test_db_session(test_db_manager):
 @pytest.fixture(scope="function")
 def test_client(test_db_session):
     """Create a test client with database dependency override"""
-    
+
     def override_get_db():
         try:
             yield test_db_session
         finally:
             pass  # Session cleanup handled by test_db_session fixture
-    
+
     app.dependency_overrides[get_db] = override_get_db
-    
+
     with TestClient(app) as client:
         yield client
-    
+
     # Clean up the override
     app.dependency_overrides.clear()
 
@@ -107,7 +111,7 @@ def sample_project_data():
         "status": "active",
         "priority": "medium",
         "start_date": "2025-01-01",
-        "target_end_date": "2025-12-31"
+        "target_end_date": "2025-12-31",
     }
 
 
@@ -120,7 +124,7 @@ def sample_task_data():
         "task_type": "task",
         "status": "backlog",
         "priority": "medium",
-        "estimated_hours": 8.0
+        "estimated_hours": 8.0,
     }
 
 
@@ -132,79 +136,75 @@ def sample_goal_data():
         "description": "A test goal for unit testing",
         "goal_type": "short_term",
         "status": "active",
-        "progress_percentage": 0.0
+        "progress_percentage": 0.0,
     }
 
 
 class DatabaseTestHelper:
     """Helper class for database testing operations"""
-    
+
     @staticmethod
     def create_test_project(session, **kwargs):
         """Create a test project with default or provided data"""
         from src.goalpath.models import Project
-        
+
         # Generate unique name if not provided
-        if 'name' not in kwargs:
+        if "name" not in kwargs:
             unique_suffix = str(uuid.uuid4())[:8]
-            kwargs['name'] = f"Test Project {unique_suffix}"
-        
-        default_data = {
-            "description": "Test Description",
-            "status": "active",
-            "priority": "medium"
-        }
+            kwargs["name"] = f"Test Project {unique_suffix}"
+
+        default_data = {"description": "Test Description", "status": "active", "priority": "medium"}
         default_data.update(kwargs)
-        
+
         project = Project(**default_data)
         session.add(project)
         session.commit()
         session.refresh(project)
         return project
-    
+
     @staticmethod
     def create_test_task(session, project_id, **kwargs):
         """Create a test task with default or provided data"""
         from src.goalpath.models import Task
-        
+
         # Generate unique title if not provided
-        if 'title' not in kwargs:
+        if "title" not in kwargs:
             unique_suffix = str(uuid.uuid4())[:8]
-            kwargs['title'] = f"Test Task {unique_suffix}"
-        
+            kwargs["title"] = f"Test Task {unique_suffix}"
+
         default_data = {
             "project_id": project_id,
             "description": "Test Description",
             "task_type": "task",
             "status": "backlog",
-            "priority": "medium"
+            "priority": "medium",
         }
         default_data.update(kwargs)
-        
+
         task = Task(**default_data)
         session.add(task)
         session.commit()
         session.refresh(task)
         return task
-    
+
     @staticmethod
     def create_test_goal(session, **kwargs):
         """Create a test goal with default or provided data"""
         from src.goalpath.models import Goal
-        
+
         # Generate unique title if not provided
-        if 'title' not in kwargs:
+        if "title" not in kwargs:
             unique_suffix = str(uuid.uuid4())[:8]
-            kwargs['title'] = f"Test Goal {unique_suffix}"
-        
+            kwargs["title"] = f"Test Goal {unique_suffix}"
+
         default_data = {
-            "description": "Test Description", 
+            "description": "Test Description",
             "goal_type": "short_term",
             "status": "active",
-            "progress_percentage": 0.0
+            "progress_percentage": 0.0,
         }
         default_data.update(kwargs)
-        
+
         goal = Goal(**default_data)
         session.add(goal)
         session.commit()
