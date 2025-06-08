@@ -2,16 +2,11 @@
 Test configuration and fixtures for GoalPath
 """
 
-import pytest
-import tempfile
-import os
 import uuid
-from pathlib import Path
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+
+import pytest
 from fastapi.testclient import TestClient
 
-from src.goalpath.models import Base
 from src.goalpath.database import DatabaseManager, get_db
 from src.goalpath.main import app
 
@@ -41,17 +36,17 @@ def test_db_session(test_db_manager):
     # Clean up by removing all data
     try:
         # Import only the models we know exist
-        from src.goalpath.models import GoalProject, TaskDependency, Task, Goal, Project
+        from src.goalpath.models import Goal, GoalProject, Project, Task, TaskDependency
 
         # Try to import extended models if they exist
         try:
             from src.goalpath.models.extended import (
-                TaskComment,
-                TaskAttachment,
-                Reminder,
                 Issue,
                 ProjectContext,
+                Reminder,
                 ScheduleEvent,
+                TaskAttachment,
+                TaskComment,
             )
 
             extended_models_available = True

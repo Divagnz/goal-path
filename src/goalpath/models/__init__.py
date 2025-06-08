@@ -3,23 +3,24 @@ SQLAlchemy models for GoalPath project management system
 Based on the approved database schema
 """
 
+import uuid
+from enum import Enum
+
 from sqlalchemy import (
+    CheckConstraint,
     Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
     String,
     Text,
-    DateTime,
-    Integer,
-    Date,
-    ForeignKey,
-    CheckConstraint,
     UniqueConstraint,
-    Numeric,
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from enum import Enum
-import uuid
 
 Base = declarative_base()
 
@@ -307,3 +308,22 @@ class SprintTask(Base):
     # Relationships
     sprint = relationship("Sprint", back_populates="task_links")
     task = relationship("Task", back_populates="sprint_links")
+
+
+# Export all models
+__all__ = [
+    "Base",
+    "Project",
+    "Task", 
+    "TaskDependency",
+    "Goal",
+    "GoalProject",
+    "Sprint",
+    "SprintTask",
+    "ProjectStatus",
+    "Priority",
+    "TaskType",
+    "TaskStatus",
+    "TaskPriority",
+    "generate_uuid",
+]

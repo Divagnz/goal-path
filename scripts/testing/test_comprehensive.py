@@ -3,8 +3,6 @@
 Comprehensive Puppeteer test for the GoalPath project detail implementation
 """
 
-import json
-import time
 
 
 def test_goalpath_project_detail():
@@ -59,7 +57,7 @@ def test_goalpath_project_detail():
 
                     # Validate content structure
                     validations = {
-                        "Has project title": f"<h1" in content and project_name in content,
+                        "Has project title": "<h1" in content and project_name in content,
                         "Has breadcrumb": 'aria-label="Breadcrumb"' in content,
                         "Has progress section": "Overall Progress" in content,
                         "Has tasks section": "Project Tasks" in content,

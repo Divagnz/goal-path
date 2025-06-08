@@ -5,11 +5,9 @@ Tests the fixed response endpoints before implementing database logic
 """
 
 import sys
-import json
-import subprocess
-import time
-import requests
 from pathlib import Path
+
+import requests
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -85,7 +83,7 @@ def test_api_endpoints():
             # Get project statistics
             response = requests.get(f"{base_url}/api/projects/{project_id}/statistics")
             assert response.status_code == 200
-            print(f"   ✅ Retrieved project statistics")
+            print("   ✅ Retrieved project statistics")
 
         # Create project
         response = requests.post(f"{base_url}/api/projects/", json=test_project)
@@ -177,17 +175,17 @@ def test_api_endpoints():
         # Filter projects by status
         response = requests.get(f"{base_url}/api/projects/?status=active")
         assert response.status_code == 200
-        print(f"   ✅ Filtered projects by status")
+        print("   ✅ Filtered projects by status")
 
         # Search tasks
         response = requests.get(f"{base_url}/api/tasks/?search=design")
         assert response.status_code == 200
-        print(f"   ✅ Searched tasks")
+        print("   ✅ Searched tasks")
 
         # Filter goals by type
         response = requests.get(f"{base_url}/api/goals/?goal_type=short_term")
         assert response.status_code == 200
-        print(f"   ✅ Filtered goals by type")
+        print("   ✅ Filtered goals by type")
 
         print("\n" + "=" * 50)
         print("🎉 All API tests passed! Mock endpoints are working correctly.")
@@ -224,9 +222,10 @@ def start_server_and_test():
 
     # Try to start the server
     try:
-        import uvicorn
         import threading
         import time
+
+        import uvicorn
 
         # Start server in a separate thread
         def run_server():

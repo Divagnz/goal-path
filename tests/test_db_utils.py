@@ -2,11 +2,10 @@
 Tests for database utilities and query helpers
 """
 
-import pytest
-from datetime import date, datetime
+
 
 from src.goalpath.db_utils import QueryUtils, TransactionManager
-from src.goalpath.models import Project, Task, Goal, GoalProject
+from src.goalpath.models import GoalProject, Project
 
 
 class TestQueryUtils:

@@ -2,9 +2,9 @@
 Tests for database initialization and sample data creation
 """
 
-import pytest
+
 from src.goalpath.init_db import DatabaseInitializer
-from src.goalpath.models import Project, Task, Goal, GoalProject
+from src.goalpath.models import Goal, GoalProject, Project, Task
 
 
 class TestDatabaseInitializer:

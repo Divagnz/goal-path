@@ -5,10 +5,8 @@ Tests the database-backed endpoints to ensure they work correctly
 """
 
 import sys
-import json
+
 import requests
-import time
-from pathlib import Path
 
 
 def test_database_apis():

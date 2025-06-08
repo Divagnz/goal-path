@@ -3,9 +3,9 @@
 Quick test script to validate the database schema
 """
 
+import os
 import sqlite3
 import sys
-import os
 from pathlib import Path
 
 

@@ -9,8 +9,8 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from goalpath.database import DatabaseManager, init_database
-from goalpath.models import Project, Task, Goal
+from goalpath.database import DatabaseManager
+from goalpath.models import Goal, Project, Task
 
 
 def test_sqlalchemy_setup():

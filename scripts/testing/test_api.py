@@ -3,8 +3,8 @@
 Quick API test script to verify database-backed endpoints
 """
 
+
 import requests
-import json
 
 BASE_URL = "http://127.0.0.1:8001"
 
@@ -58,7 +58,7 @@ def test_api():
         print(f"Error: {response.text}")
 
     # Test 4: Filter projects
-    print(f"\n4. Testing GET /api/projects/?status=active")
+    print("\n4. Testing GET /api/projects/?status=active")
     response = requests.get(f"{BASE_URL}/api/projects/?status=active")
     print(f"Status: {response.status_code}")
     if response.status_code == 200:
@@ -70,7 +70,7 @@ def test_api():
         print(f"Error: {response.text}")
 
     # Test 5: Create new project
-    print(f"\n5. Testing POST /api/projects/")
+    print("\n5. Testing POST /api/projects/")
     new_project = {
         "name": "API Test Project",
         "description": "Created via API test script",

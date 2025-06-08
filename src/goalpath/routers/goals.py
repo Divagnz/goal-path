@@ -3,24 +3,22 @@ Goals API Router - Database Implementation
 Full CRUD operations for goals with hierarchical support and progress calculation
 """
 
-from datetime import datetime, date
+from datetime import date
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Query, Depends
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func
 
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
+from ..database import get_db
+from ..db_utils import QueryUtils, TransactionManager
+from ..models import Goal, GoalProject, Project
 from ..schemas import (
     GoalCreate,
-    GoalUpdate,
     GoalResponse,
-    GoalFilters,
+    GoalUpdate,
     MessageResponse,
-    ErrorResponse,
 )
-from ..database import get_db
-from ..models import Goal, GoalProject, Project, Task
-from ..db_utils import QueryUtils, TransactionManager
 
 router = APIRouter(prefix="/api/goals", tags=["goals"])
 

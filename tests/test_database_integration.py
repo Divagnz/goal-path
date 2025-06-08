@@ -2,10 +2,10 @@
 Integration tests for database operations
 """
 
-import pytest
-from datetime import date
 
-from src.goalpath.models import Project, Task, Goal, GoalProject
+import pytest
+
+from src.goalpath.models import GoalProject, Project, Task
 
 
 class TestDatabaseIntegration:

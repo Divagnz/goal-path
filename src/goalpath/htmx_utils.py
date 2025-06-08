@@ -3,11 +3,12 @@ HTMX Utilities for GoalPath
 Helper functions for HTMX request detection and response handling
 """
 
-from typing import Optional, Dict, Any, Union
-from fastapi import Request, Response
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
 from pathlib import Path
+from typing import Any, Dict, Optional, Union
+
+from fastapi import Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 # Get templates directory
 templates_dir = Path(__file__).parent / "templates"

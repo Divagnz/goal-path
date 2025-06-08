@@ -2,12 +2,13 @@
 Database utilities and query helpers for GoalPath
 """
 
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, desc, asc
 from sqlalchemy.sql import func
 
-from .models import Project, Task, Goal, TaskDependency, GoalProject
+from .models import Goal, GoalProject, Project, Task
 
 
 class QueryUtils:

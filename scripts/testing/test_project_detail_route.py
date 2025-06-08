@@ -3,8 +3,8 @@
 Test script for the new project detail route
 """
 
+
 import requests
-import json
 
 # Test the new project detail route
 BASE_URL = "http://localhost:8001"

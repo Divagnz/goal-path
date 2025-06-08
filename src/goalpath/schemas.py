@@ -3,11 +3,11 @@ Pydantic schemas for GoalPath API
 Request and response models for validation and documentation
 """
 
-from datetime import datetime, date
-from typing import Optional, List
-from decimal import Decimal
-from pydantic import BaseModel, Field
+from datetime import date, datetime
 from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
 
 
 # Enums for validation

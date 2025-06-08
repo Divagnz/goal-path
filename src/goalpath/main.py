@@ -3,19 +3,23 @@ GoalPath FastAPI Application
 Enhanced main application with HTMX frontend support
 """
 
-from fastapi import FastAPI, Request, Depends, HTTPException
+from datetime import date, datetime
+from pathlib import Path
+
+import uvicorn
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
-from sqlalchemy.orm import Session
 from sqlalchemy import func
-import uvicorn
-from pathlib import Path
-from datetime import datetime, date
+from sqlalchemy.orm import Session
 
 from .database import get_db, init_database
-from .models import Project, Task, Goal, GoalProject
-from .routers import projects_router, tasks_router, goals_router
+from .models import Goal, GoalProject, Project, Task
+# Import extended models to ensure they are registered
+from .models.extended import Issue, Reminder, TaskComment, TaskAttachment, ProjectContext, ScheduleEvent
+from .routers import goals_router, projects_router, tasks_router
 from .routers.htmx_projects import router as htmx_projects_router
 from .routers.htmx_tasks import router as htmx_tasks_router
 
@@ -48,8 +52,7 @@ app.include_router(goals_router)
 app.include_router(htmx_projects_router)
 app.include_router(htmx_tasks_router)
 
-# CORS middleware for development
-from fastapi.middleware.cors import CORSMiddleware
+
 
 app.add_middleware(
     CORSMiddleware,

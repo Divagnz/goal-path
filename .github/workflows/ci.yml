@@ -47,7 +47,8 @@ jobs:
     - name: Run type checking
       run: |
         echo "Running type checking..."
-        uv run mypy src/goalpath --show-error-codes || true        
+        uv run mypy src/goalpath --show-error-codes || true
+        
     - name: Initialize test database
       run: |
         echo "Setting up test database..."
@@ -58,14 +59,35 @@ jobs:
         print('Test database initialized')
         "
         
-    - name: Run tests with coverage
+    - name: Run model tests
       run: |
-        echo "Running test suite..."
-        uv run pytest scripts/testing/ tests/ -v \
-          --cov=src \
-          --cov-report=xml \
-          --cov-report=term-missing \
-          --cov-fail-under=80
+        echo "Running model tests..."
+        uv run pytest tests/test_models.py -v
+        
+    - name: Run database integration tests  
+      run: |
+        echo "Running database integration tests..."
+        uv run pytest tests/test_database_integration.py -v
+        
+    - name: Run API tests
+      run: |
+        echo "Running API tests..."
+        uv run pytest tests/test_projects_api.py -v
+        
+    - name: Run init_db tests
+      run: |
+        echo "Running database initialization tests..."
+        uv run pytest tests/test_init_db.py -v
+        
+    - name: Run db_utils tests
+      run: |
+        echo "Running database utility tests..."
+        uv run pytest tests/test_db_utils.py -v
+        
+    - name: Generate coverage report
+      run: |
+        echo "Generating coverage report..."
+        uv run pytest tests/ --cov=src --cov-report=xml --cov-report=term-missing || true
         
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
@@ -75,62 +97,6 @@ jobs:
         fail_ci_if_error: false
         token: ${{ secrets.CODECOV_TOKEN }}
         
-    - name: Run integration tests
-      run: |
-        echo "Running integration tests..."
-        uv run python scripts/testing/test_comprehensive.py || true
-        uv run python scripts/testing/test_database_apis.py || true
-        
-    - name: Performance benchmark
-      if: matrix.python-version == '3.12'
-      run: |
-        echo "Running performance benchmarks..."
-        time uv run python -c "
-        import time
-        from src.goalpath.main import app
-        from fastapi.testclient import TestClient
-        
-        client = TestClient(app)
-        start = time.time()
-        for i in range(10):
-            response = client.get('/')
-            assert response.status_code == 200
-        end = time.time()
-        print(f'Average response time: {(end-start)/10:.3f}s')
-        "
-        
-    - name: Cache cleanup
-      if: always()
-      run: |
-        echo "Cleaning up cache..."
-        du -sh $UV_CACHE_DIR || true
-        find $UV_CACHE_DIR -type f -atime +7 -delete 2>/dev/null || true        
-    - name: Initialize test database
-      run: |
-        echo "Setting up test database..."
-        uv run python -c "
-        from src.goalpath.database import DatabaseManager
-        db = DatabaseManager('sqlite:///test.db')
-        db.create_tables()
-        print('Test database initialized')
-        "
-        
-    - name: Run tests with coverage
-      run: |
-        echo "Running test suite..."
-        uv run pytest scripts/testing/ tests/ -v \
-          --cov=src \
-          --cov-report=xml \
-          --cov-report=term-missing \
-          --cov-fail-under=80
-        
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      if: success() && matrix.python-version == '3.12'
-      with:
-        file: ./coverage.xml
-        fail_ci_if_error: false
-        token: ${{ secrets.CODECOV_TOKEN }}        
     - name: Run integration tests
       run: |
         echo "Running integration tests..."

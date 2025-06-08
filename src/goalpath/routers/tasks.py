@@ -3,23 +3,22 @@ Tasks API Router - Database Implementation
 Full CRUD operations for tasks with hierarchical support
 """
 
-from datetime import datetime, date
+from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Query, Depends
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
-from ..schemas import (
-    TaskCreate,
-    TaskUpdate,
-    TaskResponse,
-    TaskFilters,
-    MessageResponse,
-    ErrorResponse,
-)
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
 from ..database import get_db
-from ..models import Task, Project
 from ..db_utils import QueryUtils, TransactionManager
+from ..models import Project, Task
+from ..schemas import (
+    MessageResponse,
+    TaskCreate,
+    TaskResponse,
+    TaskUpdate,
+)
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 

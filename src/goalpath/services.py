@@ -3,14 +3,14 @@ Database service layer for GoalPath
 Centralized database operations for all entities
 """
 
-from typing import List, Optional, Dict, Any, Tuple
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import and_, or_, desc, asc, func
 from datetime import date, datetime
+from typing import Any, Dict, List, Optional
 
-from .models import Project, Task, Goal, GoalProject, TaskDependency
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
 from .db_utils import QueryUtils, TransactionManager
+from .models import Goal, GoalProject, Project, Task, TaskDependency
 
 
 class ProjectService:

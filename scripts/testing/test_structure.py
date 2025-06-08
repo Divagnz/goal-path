@@ -5,7 +5,6 @@ Tests import structure and mock data
 """
 
 import sys
-import json
 from pathlib import Path
 
 # Add src to path for imports
@@ -21,7 +20,7 @@ def test_structure():
     try:
         # Test schemas
         print("1. Testing schemas...")
-        from goalpath.schemas import ProjectCreate, TaskCreate, GoalCreate, ProjectResponse
+        from goalpath.schemas import ProjectCreate
 
         # Test creating schema instances
         project_data = {
@@ -36,9 +35,9 @@ def test_structure():
 
         print("2. Testing mock data...")
         # For now, just verify the structure without complex imports
-        print(f"   ✅ Mock projects: Router file exists")
-        print(f"   ✅ Mock tasks: Router file exists")
-        print(f"   ✅ Mock goals: Router file exists")
+        print("   ✅ Mock projects: Router file exists")
+        print("   ✅ Mock tasks: Router file exists")
+        print("   ✅ Mock goals: Router file exists")
 
         print("3. Testing application structure...")
 

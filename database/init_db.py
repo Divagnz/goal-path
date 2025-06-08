@@ -4,8 +4,8 @@ GoalPath Database Initialization Script
 Combines schema and sample data creation for development setup
 """
 
-import sqlite3
 import os
+import sqlite3
 from pathlib import Path
 
 
@@ -81,7 +81,7 @@ def init_database(db_path: str = "goalpath.db", with_sample_data: bool = True):
         cursor.execute("SELECT COUNT(*) FROM goals")
         goal_count = cursor.fetchone()[0]
 
-        print(f"Database contains:")
+        print("Database contains:")
         print(f"  - {project_count} projects")
         print(f"  - {task_count} tasks")
         print(f"  - {goal_count} goals")

@@ -3,24 +3,22 @@ Projects API Router - Database Implementation
 Full CRUD operations for projects with statistics and filtering
 """
 
-from datetime import datetime, date
+from datetime import date
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Query, Depends
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
-from ..schemas import (
-    ProjectCreate,
-    ProjectUpdate,
-    ProjectResponse,
-    ProjectFilters,
-    MessageResponse,
-    ErrorResponse,
-    PaginatedResponse,
-)
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
 from ..database import get_db
-from ..models import Project
 from ..db_utils import QueryUtils, TransactionManager
+from ..models import Project
+from ..schemas import (
+    MessageResponse,
+    ProjectCreate,
+    ProjectResponse,
+    ProjectUpdate,
+)
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -199,6 +197,7 @@ async def get_project_statistics(project_id: str, db: Session = Depends(get_db))
 
         # Calculate additional statistics
         from sqlalchemy import func
+
         from ..models import Task
 
         # Get task statistics by status

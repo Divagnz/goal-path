@@ -62,7 +62,7 @@ def test_complete_navigation_flow():
             print(f"   ↩️  Back to projects link: {'✅' if has_back_link else '❌'}")
 
             # Step 3: Test back navigation
-            print(f"\n3. Testing back navigation...")
+            print("\n3. Testing back navigation...")
             back_response = requests.get(f"{BASE_URL}/projects", headers=htmx_headers)
             assert (
                 back_response.status_code == 200
@@ -71,7 +71,7 @@ def test_complete_navigation_flow():
             print(f"   ✅ Back navigation works ({len(back_response.text)} chars)")
 
             # Step 4: Test direct URL access (non-HTMX)
-            print(f"\n4. Testing direct URL access...")
+            print("\n4. Testing direct URL access...")
             direct_response = requests.get(f"{BASE_URL}{project_url}")
             assert (
                 direct_response.status_code == 200
@@ -80,7 +80,7 @@ def test_complete_navigation_flow():
             print(f"   ✅ Direct URL access works ({len(direct_response.text)} chars)")
 
             # Step 5: Test error handling
-            print(f"\n5. Testing error handling...")
+            print("\n5. Testing error handling...")
             error_response = requests.get(f"{BASE_URL}/projects/nonexistent-id")
             assert (
                 error_response.status_code == 404
@@ -97,8 +97,8 @@ def test_complete_navigation_flow():
             has_error_message = "not found" in htmx_error_response.text.lower()
             has_back_button = error_soup.find("a", attrs={"hx-get": "/projects"}) is not None
 
-            print(f"   ✅ Regular request returns 404")
-            print(f"   ✅ HTMX request returns error fragment")
+            print("   ✅ Regular request returns 404")
+            print("   ✅ HTMX request returns error fragment")
             print(f"   💬 Error message: {'✅' if has_error_message else '❌'}")
             print(f"   🔙 Back button: {'✅' if has_back_button else '❌'}")
 

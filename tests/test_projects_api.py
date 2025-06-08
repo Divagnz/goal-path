@@ -2,9 +2,7 @@
 Tests for database-backed Projects API endpoints
 """
 
-import pytest
-from datetime import date, datetime
-from fastapi.testclient import TestClient
+
 
 from src.goalpath.init_db import DatabaseInitializer
 

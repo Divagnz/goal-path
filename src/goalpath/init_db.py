@@ -3,11 +3,14 @@ Database initialization and sample data seeding for GoalPath
 """
 
 from datetime import date, datetime
+from typing import Any, Dict, List
+
 from sqlalchemy.orm import Session
-from typing import Dict, Any, List
 
 from .database import db_manager
-from .models import Project, Task, Goal, GoalProject
+from .models import Goal, GoalProject, Project, Task
+# Import extended models to ensure they are registered
+from .models.extended import Issue, Reminder, TaskComment, TaskAttachment, ProjectContext, ScheduleEvent
 
 
 class DatabaseInitializer:

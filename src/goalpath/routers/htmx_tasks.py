@@ -3,24 +3,22 @@ HTMX Router for Tasks
 Handles HTMX-specific task operations returning HTML fragments
 """
 
-from datetime import datetime, date
-from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, Form, Depends, Request, Query
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
+from datetime import datetime
+from typing import Any, Optional
 
-from ..schemas import TaskCreate, TaskUpdate
+from fastapi import APIRouter, Depends, Form, Query, Request
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
 from ..database import get_db
-from ..models import Task, Project
-from ..db_utils import QueryUtils, TransactionManager
+from ..db_utils import TransactionManager
 from ..htmx_utils import (
-    htmx_response,
     htmx_error_response,
-    htmx_success_response,
-    is_htmx_request,
     htmx_required,
-    render_fragment,
+    htmx_response,
+    htmx_success_response,
 )
+from ..models import Project, Task
 
 router = APIRouter(prefix="/htmx/tasks", tags=["htmx-tasks"])
 

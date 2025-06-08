@@ -2,11 +2,12 @@
 Unit tests for database models
 """
 
+from datetime import date
+
 import pytest
-from datetime import date, datetime
 from sqlalchemy.exc import IntegrityError
 
-from src.goalpath.models import Project, Task, Goal, TaskDependency, GoalProject
+from src.goalpath.models import Goal, GoalProject, Project, Task, TaskDependency
 
 
 class TestProjectModel:

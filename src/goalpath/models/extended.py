@@ -4,19 +4,18 @@ Reminders, Issues, Comments, Context, and other supporting entities
 """
 
 from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
     Column,
+    DateTime,
+    ForeignKey,
     String,
     Text,
-    DateTime,
-    Integer,
-    BigInteger,
-    ForeignKey,
-    CheckConstraint,
     UniqueConstraint,
-    Numeric,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
 from . import Base, generate_uuid
 
 
@@ -198,14 +197,6 @@ class ScheduleEvent(Base):
 
 # Export all models
 __all__ = [
-    "Base",
-    "Project",
-    "Task",
-    "TaskDependency",
-    "Goal",
-    "GoalProject",
-    "Sprint",
-    "SprintTask",
     "Reminder",
     "Issue",
     "TaskComment",

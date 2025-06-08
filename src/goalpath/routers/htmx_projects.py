@@ -3,25 +3,22 @@ HTMX Router for Projects
 Handles HTMX-specific project operations returning HTML fragments
 """
 
-from datetime import datetime, date
-from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, Form, Depends, Request
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
-from pydantic import ValidationError
+from datetime import datetime
+from typing import Any, Optional
 
-from ..schemas import ProjectCreate, ProjectUpdate
+from fastapi import APIRouter, Depends, Form, Request
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
 from ..database import get_db
-from ..models import Project, Task
 from ..db_utils import QueryUtils, TransactionManager
 from ..htmx_utils import (
-    htmx_response,
     htmx_error_response,
-    htmx_success_response,
-    is_htmx_request,
     htmx_required,
-    render_fragment,
+    htmx_response,
+    htmx_success_response,
 )
+from ..models import Project, Task
 
 router = APIRouter(prefix="/htmx/projects", tags=["htmx-projects"])
 

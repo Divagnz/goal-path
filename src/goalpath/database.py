@@ -2,25 +2,16 @@
 Database configuration and setup for GoalPath
 """
 
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import StaticPool
-import os
 from pathlib import Path
 from typing import Generator
 
-from .models import Base
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
-# Import specific models to avoid circular imports
-from .models import Project, Task, Goal
-from .models.extended import (
-    Reminder,
-    Issue,
-    TaskComment,
-    TaskAttachment,
-    ProjectContext,
-    ScheduleEvent,
-)
+# Import all models to ensure they are registered with SQLAlchemy
+from .models import Base, Project, Task, Goal, TaskDependency, GoalProject, Sprint, SprintTask
+from .models.extended import Issue, Reminder, TaskComment, TaskAttachment, ProjectContext, ScheduleEvent
 
 
 class DatabaseManager:
