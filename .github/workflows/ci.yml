@@ -13,9 +13,6 @@ jobs:
   test:
     name: Run Tests and Quality Checks
     runs-on: [self-hosted, linux]
-    strategy:
-      matrix:
-        python-version: ["3.11", "3.12"]
     
     steps:
     - name: Checkout code
@@ -28,11 +25,11 @@ jobs:
         cache-dependency-glob: "uv.lock"
       continue-on-error: true  # Don't fail if cache setup fails
         
-    - name: Set up Python ${{ matrix.python-version }}
-      run: uv python install ${{ matrix.python-version }}
+    - name: Set up Python 3.12
+      run: uv python install 3.12
       
     - name: Create virtual environment
-      run: uv venv --python ${{ matrix.python-version }}
+      run: uv venv --python 3.12
         
     - name: Install dependencies
       run: |
@@ -95,7 +92,7 @@ jobs:
         
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
-      if: success() && matrix.python-version == '3.12'
+      if: success()
       with:
         file: ./coverage.xml
         fail_ci_if_error: false
@@ -108,7 +105,6 @@ jobs:
         uv run python scripts/testing/test_database_apis.py || true
         
     - name: Performance benchmark
-      if: matrix.python-version == '3.12'
       run: |
         echo "Running performance benchmarks..."
         time uv run python -c "
