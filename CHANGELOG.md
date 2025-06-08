@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Simplified CI workflow to use only Python 3.12 (removed 3.11 matrix)
 - Removed environment-check.yml workflow to reduce complexity
 
+### Removed
+- Complete scripts/ directory with development artifacts and testing files
+- Cache directories (.mypy_cache, .pytest_cache, .ruff_cache)
+- Redundant CI workflow steps that don't contribute to pipeline success
+- Development testing scripts that belonged in tests/ directory
+
 ### Added
 - Complete CI/CD infrastructure with GitHub Actions workflows
 - Docker containerization with Python 3.12.11 and uv package manager
