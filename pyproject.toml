@@ -189,5 +189,8 @@ dev = [
     "pytest>=8.4.0",
     "pytest-asyncio>=1.0.0",
     "pytest-cov>=6.1.1",
+    "pytest-selenium>=4.1.0",
     "ruff>=0.11.13",
+    "selenium>=4.33.0",
+    "webdriver-manager>=4.0.2",
 ]
