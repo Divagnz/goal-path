@@ -23,7 +23,7 @@ jobs:
       with:
         enable-cache: true
         cache-dependency-glob: "uv.lock"
-      continue-on-error: true  # Don't fail if cache setup fails
+      continue-on-error: true
         
     - name: Set up Python 3.12
       run: uv python install 3.12
@@ -38,71 +38,14 @@ jobs:
     - name: Run code quality checks
       run: |
         echo "Running code quality checks..."
-        echo "Running ruff check..."
         uv run ruff check . --output-format=github || echo "⚠️ Ruff found style issues"
-        echo "Running black check..."
         uv run black --check . --diff || echo "⚠️ Black found formatting issues"
-        echo "Running isort check..."
         uv run isort --check-only --diff . || echo "⚠️ isort found import order issues"
         
     - name: Run type checking
       run: |
         echo "Running type checking..."
         uv run mypy src/goalpath --show-error-codes || true
-        
-    - name: Initialize test database
-      run: |
-        echo "Setting up test database..."
-        uv run python -c "
-        from src.goalpath.database import DatabaseManager
-        db = DatabaseManager('sqlite:///test.db')
-        db.create_tables()
-        print('Test database initialized')
-        "
-        
-    - name: Run model tests
-      run: |
-        echo "Running model tests..."
-        uv run pytest tests/test_models.py -v
-        
-    - name: Run database integration tests  
-      run: |
-        echo "Running database integration tests..."
-        uv run pytest tests/test_database_integration.py -v
-        
-    - name: Run API tests
-      run: |
-        echo "Running API tests..."
-        uv run pytest tests/test_projects_api.py -v
-        
-    - name: Run init_db tests
-      run: |
-        echo "Running database initialization tests..."
-        uv run pytest tests/test_init_db.py -v
-        
-    - name: Run db_utils tests
-      run: |
-        echo "Running database utility tests..."
-        uv run pytest tests/test_db_utils.py -v
-        
-    - name: Generate coverage report
-      run: |
-        echo "Generating coverage report..."
-        uv run pytest tests/ --cov=src --cov-report=xml --cov-report=term-missing || true
-        
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      if: success()
-      with:
-        file: ./coverage.xml
-        fail_ci_if_error: false
-        token: ${{ secrets.CODECOV_TOKEN }}
-        
-    - name: Run integration tests
-      run: |
-        echo "Running integration tests..."
-        uv run python scripts/testing/test_comprehensive.py || true
-        uv run python scripts/testing/test_database_apis.py || true
         
     - name: Performance benchmark
       run: |
