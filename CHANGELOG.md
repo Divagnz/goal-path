@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced model imports in database.py, main.py, and init_db.py
 - Updated CI workflow to run test files individually for better isolation
 - Repository cleanup: removed development artifacts and cache directories
+- Simplified CI workflow to use only Python 3.12 (removed 3.11 matrix)
+- Removed environment-check.yml workflow to reduce complexity
 
 ### Added
 - Complete CI/CD infrastructure with GitHub Actions workflows
