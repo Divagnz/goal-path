@@ -32,8 +32,8 @@ class TestDatabaseIntegration:
         project = db_helper.create_test_project(test_db_session, name="Delete Test Project")
 
         # Create tasks for this project
-        task1 = db_helper.create_test_task(test_db_session, project.id, title="Task 1")
-        task2 = db_helper.create_test_task(test_db_session, project.id, title="Task 2")
+        db_helper.create_test_task(test_db_session, project.id, title="Task 1")
+        db_helper.create_test_task(test_db_session, project.id, title="Task 2")
 
         # Verify tasks exist
         task_count = test_db_session.query(Task).filter(Task.project_id == project.id).count()

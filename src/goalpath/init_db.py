@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from .database import db_manager
 from .models import Goal, GoalProject, Project, Task
 # Import extended models to ensure they are registered
-from .models.extended import Issue, Reminder, TaskComment, TaskAttachment, ProjectContext, ScheduleEvent
+from .models.extended import Issue, Reminder, TaskComment, TaskAttachment, ProjectContext, ScheduleEvent  # noqa: F401
 
 
 class DatabaseInitializer:

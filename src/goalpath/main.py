@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from .database import get_db, init_database
 from .models import Goal, GoalProject, Project, Task
 # Import extended models to ensure they are registered
-from .models.extended import Issue, Reminder, TaskComment, TaskAttachment, ProjectContext, ScheduleEvent
+from .models.extended import Issue, Reminder, TaskComment, TaskAttachment, ProjectContext, ScheduleEvent  # noqa: F401
 from .routers import goals_router, projects_router, tasks_router
 from .routers.htmx_projects import router as htmx_projects_router
 from .routers.htmx_tasks import router as htmx_tasks_router

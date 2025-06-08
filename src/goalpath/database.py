@@ -11,7 +11,11 @@ from sqlalchemy.pool import StaticPool
 
 # Import all models to ensure they are registered with SQLAlchemy
 from .models import Base, Project, Task, Goal, TaskDependency, GoalProject, Sprint, SprintTask
-from .models.extended import Issue, Reminder, TaskComment, TaskAttachment, ProjectContext, ScheduleEvent
+from .models.extended import Issue, Reminder, TaskComment, TaskAttachment, ProjectContext, ScheduleEvent  # noqa: F401
+
+# Ensure all models are registered (prevents F401 warnings)
+__all__ = ["Base", "Project", "Task", "Goal", "TaskDependency", "GoalProject", "Sprint", "SprintTask",
+           "Issue", "Reminder", "TaskComment", "TaskAttachment", "ProjectContext", "ScheduleEvent"]
 
 
 class DatabaseManager:
