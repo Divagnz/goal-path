@@ -3,11 +3,12 @@ HTMX Utilities for GoalPath
 Helper functions for HTMX request detection and response handling
 """
 
-from typing import Optional, Dict, Any, Union
-from fastapi import Request, Response
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
 from pathlib import Path
+from typing import Any, Dict, Optional, Union
+
+from fastapi import Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 # Get templates directory
 templates_dir = Path(__file__).parent / "templates"
@@ -51,7 +52,7 @@ def htmx_response(
 ) -> HTMLResponse:
     """
     Create an HTMX-compatible HTML response with proper headers.
-    
+
     Args:
         template_name: Jinja2 template to render
         context: Template context data
@@ -67,38 +68,35 @@ def htmx_response(
     """
     # Render the template
     html_content = templates.get_template(template_name).render(context)
-    
+
     # Prepare response headers
     response_headers = headers or {}
-    
+
     # Add HTMX-specific headers
     if trigger:
         if isinstance(trigger, dict):
             import json
+
             response_headers["HX-Trigger"] = json.dumps(trigger)
         else:
             response_headers["HX-Trigger"] = str(trigger)
-    
+
     if push_url:
         response_headers["HX-Push-Url"] = push_url
-    
+
     if redirect:
         response_headers["HX-Redirect"] = redirect
-    
+
     if refresh:
         response_headers["HX-Refresh"] = "true"
-    
+
     if swap:
         response_headers["HX-Reswap"] = swap
-    
+
     if target:
         response_headers["HX-Retarget"] = target
-    
-    return HTMLResponse(
-        content=html_content,
-        status_code=status_code,
-        headers=response_headers
-    )
+
+    return HTMLResponse(content=html_content, status_code=status_code, headers=response_headers)
 
 
 def htmx_error_response(
@@ -106,11 +104,11 @@ def htmx_error_response(
     request: Request,
     status_code: int = 400,
     field_errors: Optional[Dict[str, str]] = None,
-    trigger_close_modal: bool = False
+    trigger_close_modal: bool = False,
 ) -> HTMLResponse:
     """
     Create an HTMX error response with proper error handling.
-    
+
     Args:
         error_message: Main error message
         request: FastAPI request object
@@ -122,19 +120,19 @@ def htmx_error_response(
         "request": request,
         "error_message": error_message,
         "field_errors": field_errors or {},
-        "status_code": status_code
+        "status_code": status_code,
     }
-    
+
     headers = {}
     if trigger_close_modal:
         headers["HX-Trigger"] = "closeModal"
-    
+
     return htmx_response(
         template_name="fragments/error_message.html",
         context=context,
         request=request,
         status_code=status_code,
-        headers=headers
+        headers=headers,
     )
 
 
@@ -144,11 +142,11 @@ def htmx_success_response(
     request: Request,
     success_message: str,
     trigger_close_modal: bool = True,
-    additional_triggers: Optional[Dict[str, Any]] = None
+    additional_triggers: Optional[Dict[str, Any]] = None,
 ) -> HTMLResponse:
     """
     Create an HTMX success response with notifications.
-    
+
     Args:
         template_name: Template to render for the updated content
         context: Template context
@@ -159,32 +157,21 @@ def htmx_success_response(
     """
     # Prepare trigger events
     triggers = {
-        "showNotification": {
-            "type": "success",
-            "title": "Success",
-            "message": success_message
-        }
+        "showNotification": {"type": "success", "title": "Success", "message": success_message}
     }
-    
+
     if trigger_close_modal:
         triggers["closeModal"] = True
-    
+
     if additional_triggers:
         triggers.update(additional_triggers)
-    
+
     return htmx_response(
-        template_name=template_name,
-        context=context,
-        request=request,
-        trigger=triggers
+        template_name=template_name, context=context, request=request, trigger=triggers
     )
 
 
-def render_fragment(
-    template_name: str,
-    context: Dict[str, Any],
-    request: Request
-) -> str:
+def render_fragment(template_name: str, context: Dict[str, Any], request: Request) -> str:
     """
     Render a template fragment and return as string.
     Useful for partial content updates.
@@ -198,13 +185,13 @@ class HTMXDepends:
     FastAPI dependency for HTMX request validation.
     Use this to ensure endpoints are only called via HTMX.
     """
-    
+
     def __call__(self, request: Request) -> bool:
         if not is_htmx_request(request):
             from fastapi import HTTPException
+
             raise HTTPException(
-                status_code=400,
-                detail="This endpoint is only accessible via HTMX requests"
+                status_code=400, detail="This endpoint is only accessible via HTMX requests"
             )
         return True
 

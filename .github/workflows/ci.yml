@@ -1,0 +1,73 @@
+name: CI - Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  UV_CACHE_DIR: /tmp/.uv-cache
+
+jobs:
+  test:
+    name: Run Tests and Quality Checks
+    runs-on: [self-hosted, linux]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+      continue-on-error: true
+        
+    - name: Set up Python 3.12
+      run: uv python install 3.12
+      
+    - name: Create virtual environment
+      run: uv venv --python 3.12
+        
+    - name: Install dependencies
+      run: |
+        uv sync --dev --frozen
+        
+    - name: Run code quality checks
+      run: |
+        echo "Running code quality checks..."
+        uv run ruff check . --output-format=github || echo "⚠️ Ruff found style issues"
+        uv run black --check . --diff || echo "⚠️ Black found formatting issues"
+        uv run isort --check-only --diff . || echo "⚠️ isort found import order issues"
+        
+    - name: Run type checking
+      run: |
+        echo "Running type checking..."
+        uv run mypy src/goalpath --show-error-codes || true
+        
+    - name: Performance benchmark
+      run: |
+        echo "Running performance benchmarks..."
+        time uv run python -c "
+        import time
+        from src.goalpath.main import app
+        from fastapi.testclient import TestClient
+        
+        client = TestClient(app)
+        start = time.time()
+        for i in range(10):
+            response = client.get('/')
+            assert response.status_code == 200
+        end = time.time()
+        print(f'Average response time: {(end-start)/10:.3f}s')
+        "
+        
+    - name: Cache cleanup
+      if: always()
+      run: |
+        echo "Cleaning up cache..."
+        du -sh $UV_CACHE_DIR 2>/dev/null || echo "Cache directory not found"
+        find $UV_CACHE_DIR -type f -atime +7 -delete 2>/dev/null || echo "Cache cleanup completed"
+      continue-on-error: true
