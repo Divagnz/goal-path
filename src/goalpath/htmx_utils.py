@@ -171,6 +171,16 @@ def htmx_success_response(
     )
 
 
+def render_template(template_name: str, request: Request, **context) -> HTMLResponse:
+    """
+    Render a template and return as HTMLResponse.
+    Convenience function for HTMX endpoints.
+    """
+    context["request"] = request
+    html_content = templates.get_template(template_name).render(context)
+    return HTMLResponse(content=html_content)
+
+
 def render_fragment(template_name: str, context: Dict[str, Any], request: Request) -> str:
     """
     Render a template fragment and return as string.

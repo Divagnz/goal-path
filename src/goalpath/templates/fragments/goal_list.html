@@ -1,0 +1,44 @@
+click="open = false"
+                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            Mark Active
+                        </button>
+                        <button hx-put="/htmx/goals/{{ goal.id }}/status"
+                                hx-vals='{"status": "completed"}'
+                                hx-target="closest .bg-white"
+                                @click="open = false"
+                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            Mark Complete
+                        </button>
+                        <button hx-put="/htmx/goals/{{ goal.id }}/status"
+                                hx-vals='{"status": "paused"}'
+                                hx-target="closest .bg-white"
+                                @click="open = false"
+                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            Pause Goal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-span-full text-center py-12">
+        <div class="text-gray-400 mb-4">
+            <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" 
+                      d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+            </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No goals found</h3>
+        <p class="text-gray-500 mb-4">Get started by creating your first goal to track your achievements.</p>
+        <button hx-get="/modals/create-goal"
+                hx-target="#modal-container"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+            <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Create Goal
+        </button>
+    </div>
+    {% endfor %}
+</div>

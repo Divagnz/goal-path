@@ -41,11 +41,9 @@ class Priority(str, Enum):
 
 
 class TaskType(str, Enum):
-    EPIC = "epic"
     STORY = "story"
     TASK = "task"
     SUBTASK = "subtask"
-    MILESTONE = "milestone"
     BUG = "bug"
 
 
@@ -73,6 +71,10 @@ def generate_uuid():
     return str(uuid.uuid4())
 
 
+# Import Epic and Milestone models early to ensure they're available for foreign key references
+from .epics import Epic, Milestone, EpicStatus, EpicPriority, MilestoneStatus
+
+
 class Project(Base):
     """Project model representing main project entities"""
 
@@ -92,6 +94,8 @@ class Project(Base):
 
     # Relationships
     tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
+    epics = relationship("Epic", back_populates="project", cascade="all, delete-orphan")
+    milestones = relationship("Milestone", back_populates="project", cascade="all, delete-orphan")
     sprints = relationship("Sprint", back_populates="project", cascade="all, delete-orphan")
     issues = relationship("Issue", back_populates="project", cascade="all, delete-orphan")
     context = relationship("ProjectContext", back_populates="project", cascade="all, delete-orphan")
@@ -124,6 +128,8 @@ class Task(Base):
 
     id = Column(String, primary_key=True, default=generate_uuid)
     project_id = Column(String, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    epic_id = Column(String, ForeignKey("epics.id", ondelete="SET NULL"))
+    milestone_id = Column(String, ForeignKey("milestones.id", ondelete="SET NULL"))
     parent_task_id = Column(String, ForeignKey("tasks.id", ondelete="SET NULL"))
     title = Column(String(255), nullable=False)
     description = Column(Text)
@@ -144,6 +150,8 @@ class Task(Base):
 
     # Relationships
     project = relationship("Project", back_populates="tasks")
+    epic = relationship("Epic", back_populates="tasks")
+    milestone = relationship("Milestone", back_populates="tasks")
     parent_task = relationship("Task", remote_side=[id], back_populates="subtasks")
     subtasks = relationship("Task", back_populates="parent_task", cascade="all, delete-orphan")
     comments = relationship("TaskComment", back_populates="task", cascade="all, delete-orphan")
@@ -164,7 +172,7 @@ class Task(Base):
     # Constraints
     __table_args__ = (
         CheckConstraint(
-            "task_type IN ('epic', 'story', 'task', 'subtask', 'milestone', 'bug')",
+            "task_type IN ('story', 'task', 'subtask', 'bug')",
             name="chk_task_type",
         ),
         CheckConstraint(
@@ -320,10 +328,15 @@ __all__ = [
     "GoalProject",
     "Sprint",
     "SprintTask",
+    "Epic",
+    "Milestone", 
     "ProjectStatus",
     "Priority",
     "TaskType",
     "TaskStatus",
     "TaskPriority",
+    "EpicStatus",
+    "EpicPriority",
+    "MilestoneStatus",
     "generate_uuid",
 ]

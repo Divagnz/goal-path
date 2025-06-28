@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Milestones - GoalPath{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Milestones</h1>
+            <p class="text-gray-600">Track progress within epics and monitor key deliverables</p>
+        </div>
+        <button 
+            hx-get="/modals/create-milestone"
+            hx-target="#modal-container"
+            class="mt-4 sm:mt-0 bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors duration-200 flex items-center"
+        >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+            Create Milestone
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Epic</label>
+                <select 
+                    id="epic-filter"
+                    hx-get="/htmx/milestones/list"
+                    hx-target="#milestones-container"
+                    hx-include="[id$='-filter']"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2"
+                >
+                    <option value="">All Epics</option>
+                    <!-- Epic options will be populated dynamically -->
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select 
+                    id="status-filter"
+                    hx-get="/htmx/milestones/list"
+                    hx-target="#milestones-container"
+                    hx-include="[id$='-filter']"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2"
+                >
+                    <option value="">All Statuses</option>
+                    <option value="planned">Planned</option>
+                    <option value="active">Active</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="delayed">Delayed</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+                <select 
+                    id="due-filter"
+                    hx-get="/htmx/milestones/list"
+                    hx-target="#milestones-container"
+                    hx-include="[id$='-filter']"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2"
+                >
+                    <option value="">All Dates</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="this-week">This Week</option>
+                    <option value="this-month">This Month</option>
+                    <option value="next-month">Next Month</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                <input 
+                    type="text" 
+                    id="search-filter"
+                    placeholder="Search milestones..."
+                    hx-get="/htmx/milestones/list"
+                    hx-target="#milestones-container"
+                    hx-include="[id$='-filter']"
+                    hx-trigger="keyup changed delay:300ms"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2"
+                >
+            </div>
+        </div>
+    </div>
+
+    <!-- Milestones Timeline View -->
+    <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Timeline View</h2>
+        <div id="milestones-timeline" hx-get="/htmx/milestones/timeline" hx-trigger="load">
+            <!-- Timeline will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Milestones Grid -->
+    <div id="milestones-container" hx-get="/htmx/milestones/list" hx-trigger="load">
+        <!-- Milestone cards will be loaded here -->
+        <div class="flex justify-center items-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Container -->
+<div id="modal-container"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-refresh milestones every 30 seconds
+    setInterval(() => {
+        htmx.trigger('#milestones-container', 'refresh');
+        htmx.trigger('#milestones-timeline', 'refresh');
+    }, 30000);
+    
+    // Handle milestone progress updates
+    document.body.addEventListener('htmx:afterRequest', function(evt) {
+        if (evt.detail.xhr.status === 200) {
+            // Show success message for milestone updates
+            if (evt.detail.requestConfig.headers['HX-Trigger-Name'] && 
+                evt.detail.requestConfig.headers['HX-Trigger-Name'].includes('milestone')) {
+                showNotification('Milestone updated successfully', 'success');
+                
+                // Refresh timeline if milestone was updated
+                htmx.trigger('#milestones-timeline', 'refresh');
+            }
+        }
+    });
+    
+    // Handle milestone completion
+    function markMilestoneComplete(milestoneId) {
+        fetch(`/api/milestones/${milestoneId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: 'completed' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            showNotification('Milestone marked as complete!', 'success');
+            htmx.trigger('#milestones-container', 'refresh');
+            htmx.trigger('#milestones-timeline', 'refresh');
+        })
+        .catch(error => {
+            showNotification('Error updating milestone', 'error');
+        });
+    }
+    
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full ${
+            type === 'success' ? 'bg-green-500 text-white' : 
+            type === 'error' ? 'bg-red-500 text-white' : 
+            'bg-purple-500 text-white'
+        }`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.classList.remove('translate-x-full');
+        }, 100);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.classList.add('translate-x-full');
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+</script>
+{% endblock %}

@@ -32,8 +32,7 @@ async def create_project_htmx(
     status: str = Form("active"),
     start_date: Optional[str] = Form(None),
     target_end_date: Optional[str] = Form(None),
-    db: Session = Depends(get_db),
-    _htmx: bool = Depends(htmx_required),
+    db: Session = Depends(get_db)
 ) -> Any:
     """
     Create a new project via HTMX and return HTML fragment.
@@ -97,17 +96,19 @@ async def create_project_htmx(
             )
 
         # Create project in database
-        with TransactionManager(db) as db_session:
+        try:
             new_project = Project(**project_data)
-            db_session.add(new_project)
-            db_session.commit()
-            db_session.refresh(new_project)
+            db.add(new_project)
+            db.commit()
+            db.refresh(new_project)
 
-            # Get project with statistics
-            project_with_stats = QueryUtils.get_project_with_stats(db_session, new_project.id)
+            # Calculate basic statistics
+            new_project.total_tasks = 0
+            new_project.completed_tasks = 0
+            new_project.completion_percentage = 0.0
 
             # Render the project card fragment
-            context = {"request": request, "project": project_with_stats}
+            context = {"request": request, "project": new_project}
 
             return htmx_success_response(
                 template_name="fragments/project_card.html",
@@ -338,19 +339,42 @@ async def get_projects_list_htmx(
     priority: Optional[str] = None,
     search: Optional[str] = None,
     limit: int = 10,
-    db: Session = Depends(get_db),
-    _htmx: bool = Depends(htmx_required),
+    db: Session = Depends(get_db)
 ) -> Any:
     """
     Get a list of project cards for dashboard updates.
     """
 
     try:
-        projects_data = QueryUtils.get_projects_with_stats(
-            db=db, status=status, priority=priority, search=search, page=1, size=limit
-        )
+        # Build query with filters
+        query = db.query(Project)
+        
+        if status:
+            query = query.filter(Project.status == status)
+        if priority:
+            query = query.filter(Project.priority == priority)
+        if search:
+            query = query.filter(
+                Project.name.ilike(f"%{search}%") | 
+                Project.description.ilike(f"%{search}%")
+            )
+        
+        # Get projects
+        projects = query.order_by(Project.updated_at.desc()).limit(limit).all()
+        
+        # Calculate statistics for each project
+        for project in projects:
+            total_tasks = db.query(Task).filter(Task.project_id == project.id).count()
+            completed_tasks = (
+                db.query(Task).filter(Task.project_id == project.id, Task.status == "done").count()
+            )
+            project.total_tasks = total_tasks
+            project.completed_tasks = completed_tasks
+            project.completion_percentage = (
+                (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0.0
+            )
 
-        context = {"request": request, "projects": projects_data}
+        context = {"request": request, "projects": projects}
 
         return htmx_response(
             template_name="fragments/projects_list.html", context=context, request=request

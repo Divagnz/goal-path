@@ -1,0 +1,162 @@
+<!-- Individual Milestone Card -->
+<div class="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow duration-200" 
+     id="milestone-{{ milestone.id }}">
+    
+    <!-- Card Header -->
+    <div class="p-6 border-b">
+        <div class="flex items-start justify-between">
+            <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-900 mb-1">
+                    {{ milestone.title }}
+                </h3>
+                <p class="text-sm text-gray-600 mb-2">
+                    Epic: {{ milestone.epic.title }}
+                </p>
+                {% if milestone.description %}
+                <p class="text-gray-700 text-sm">
+                    {{ milestone.description[:120] }}{% if milestone.description|length > 120 %}...{% endif %}
+                </p>
+                {% endif %}
+            </div>
+            
+            <!-- Status Badge -->
+            <div class="ml-4">
+                {% set status_colors = {
+                    'planned': 'bg-gray-100 text-gray-800',
+                    'active': 'bg-blue-100 text-blue-800', 
+                    'completed': 'bg-green-100 text-green-800',
+                    'cancelled': 'bg-red-100 text-red-800',
+                    'delayed': 'bg-yellow-100 text-yellow-800'
+                } %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ status_colors.get(milestone.status, 'bg-gray-100 text-gray-800') }}">
+                    {{ milestone.status.replace('_', ' ').title() }}
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Progress Section -->
+    <div class="p-6">
+        <div class="mb-4">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-medium text-gray-700">Progress</span>
+                <span class="text-sm text-gray-600">{{ "%.1f"|format(milestone.progress_percentage) }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="h-2 rounded-full transition-all duration-300 
+                           {% if milestone.progress_percentage == 100 %}bg-green-500
+                           {% elif milestone.progress_percentage >= 75 %}bg-blue-500
+                           {% elif milestone.progress_percentage >= 50 %}bg-yellow-500
+                           {% elif milestone.progress_percentage >= 25 %}bg-orange-500
+                           {% else %}bg-gray-400{% endif %}"
+                     style="width: {{ milestone.progress_percentage }}%">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Due Date -->
+        {% if milestone.due_date %}
+        <div class="flex items-center text-sm mb-4">
+            {% set days_until_due = (milestone.due_date - today).days %}
+            {% if milestone.status == 'completed' %}
+                <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="text-green-600 font-medium">Completed</span>
+                {% if milestone.completed_date %}
+                <span class="text-gray-500 ml-2">{{ milestone.completed_date.strftime('%b %d, %Y') }}</span>
+                {% endif %}
+            {% elif days_until_due < 0 %}
+                <svg class="w-4 h-4 mr-2 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="text-red-600 font-medium">Overdue by {{ -days_until_due }} day{{ 's' if -days_until_due != 1 else '' }}</span>
+            {% elif days_until_due == 0 %}
+                <svg class="w-4 h-4 mr-2 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L10 9.586V6z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="text-orange-600 font-medium">Due today</span>
+            {% elif days_until_due <= 7 %}
+                <svg class="w-4 h-4 mr-2 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L10 9.586V6z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="text-yellow-600 font-medium">Due in {{ days_until_due }} day{{ 's' if days_until_due != 1 else '' }}</span>
+            {% else %}
+                <svg class="w-4 h-4 mr-2 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zM4 7h12v9a1 1 0 01-1 1H5a1 1 0 01-1-1V7z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="text-gray-600">Due {{ milestone.due_date.strftime('%b %d, %Y') }}</span>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Task Count -->
+        {% if milestone.tasks %}
+        <div class="flex items-center text-sm text-gray-600 mb-4">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            {{ milestone.tasks|length }} task{{ 's' if milestone.tasks|length != 1 else '' }}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Actions -->
+    <div class="px-6 py-3 bg-gray-50 border-t flex justify-between items-center">
+        <div class="flex space-x-2">
+            <!-- Quick Status Updates -->
+            {% if milestone.status != 'completed' %}
+            <button 
+                hx-put="/htmx/milestones/{{ milestone.id }}/status?new_status=completed"
+                hx-target="#milestone-{{ milestone.id }}"
+                hx-swap="outerHTML"
+                class="text-sm bg-green-100 hover:bg-green-200 text-green-800 px-3 py-1 rounded-lg transition-colors duration-200"
+                title="Mark as completed"
+            >
+                Complete
+            </button>
+            {% endif %}
+            
+            {% if milestone.status == 'planned' %}
+            <button 
+                hx-put="/htmx/milestones/{{ milestone.id }}/status?new_status=active"
+                hx-target="#milestone-{{ milestone.id }}"
+                hx-swap="outerHTML"
+                class="text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded-lg transition-colors duration-200"
+                title="Start milestone"
+            >
+                Start
+            </button>
+            {% endif %}
+        </div>
+        
+        <div class="flex space-x-2">
+            <!-- Edit Button -->
+            <button 
+                hx-get="/htmx/milestones/{{ milestone.id }}/edit"
+                hx-target="#milestone-{{ milestone.id }}"
+                hx-swap="outerHTML"
+                class="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                title="Edit milestone"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+            </button>
+            
+            <!-- Delete Button -->
+            <button 
+                hx-delete="/htmx/milestones/{{ milestone.id }}"
+                hx-target="#milestone-{{ milestone.id }}"
+                hx-swap="outerHTML"
+                hx-confirm="Are you sure you want to delete this milestone?"
+                class="text-red-600 hover:text-red-800 transition-colors duration-200"
+                title="Delete milestone"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>

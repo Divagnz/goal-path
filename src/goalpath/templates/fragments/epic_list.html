@@ -1,0 +1,165 @@
+<!-- Epic List Fragment -->
+<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    {% for epic in epics %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <!-- Epic Header -->
+        <div class="flex items-start justify-between mb-4">
+            <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ epic.title }}</h3>
+                <p class="text-sm text-gray-600">{{ epic.project.name if epic.project else 'No Project' }}</p>
+            </div>
+            
+            <!-- Epic Actions -->
+            <div class="flex items-center space-x-2">
+                <span class="status-badge {% if epic.status == 'active' %}status-active{% elif epic.status == 'completed' %}status-completed{% elif epic.status == 'planning' %}bg-blue-100 text-blue-800 border border-blue-200{% elif epic.status == 'on_hold' %}bg-yellow-100 text-yellow-800 border border-yellow-200{% else %}bg-gray-100 text-gray-800 border border-gray-200{% endif %}">
+                    {{ epic.status.replace('_', ' ').title() }}
+                </span>
+                
+                <!-- Priority Badge -->
+                <span class="status-badge {% if epic.priority == 'critical' %}priority-critical{% elif epic.priority == 'high' %}priority-high{% elif epic.priority == 'medium' %}priority-medium{% else %}priority-low{% endif %}">
+                    {{ epic.priority.title() }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Epic Description -->
+        {% if epic.description %}
+        <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ epic.description }}</p>
+        {% endif %}
+
+        <!-- Epic Progress -->
+        <div class="mb-4">
+            <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-medium text-gray-700">Progress</span>
+                <span class="text-xs text-gray-500">{{ epic.completion_percentage|round(1) }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full progress-bar" 
+                     style="width: {{ epic.completion_percentage|round(1) }}%"></div>
+            </div>
+        </div>
+
+        <!-- Epic Stats -->
+        <div class="grid grid-cols-3 gap-4 text-center text-xs text-gray-500 mb-4">
+            <div>
+                <div class="font-semibold text-gray-900">{{ epic.milestone_count or 0 }}</div>
+                <div>Milestones</div>
+            </div>
+            <div>
+                <div class="font-semibold text-gray-900">{{ epic.task_count or 0 }}</div>
+                <div>Tasks</div>
+            </div>
+            <div>
+                <div class="font-semibold text-gray-900">{{ epic.story_points or 0 }}</div>
+                <div>Points</div>
+            </div>
+        </div>
+
+        <!-- Epic Dates -->
+        {% if epic.start_date or epic.target_end_date %}
+        <div class="text-xs text-gray-500 mb-4">
+            {% if epic.start_date %}
+            <span>Started: {{ epic.start_date.strftime('%b %d, %Y') }}</span>
+            {% endif %}
+            {% if epic.start_date and epic.target_end_date %} • {% endif %}
+            {% if epic.target_end_date %}
+            <span>Target: {{ epic.target_end_date.strftime('%b %d, %Y') }}</span>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Assignee -->
+        {% if epic.assigned_to %}
+        <div class="text-xs text-gray-500 mb-4">
+            <span class="inline-flex items-center">
+                <div class="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center mr-2">
+                    <span class="text-white text-xs font-medium">{{ epic.assigned_to[0].upper() }}</span>
+                </div>
+                {{ epic.assigned_to }}
+            </span>
+        </div>
+        {% endif %}
+
+        <!-- Epic Actions -->
+        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+            <div class="flex space-x-2">
+                <!-- View Epic -->
+                <button hx-get="/epics/{{ epic.id }}"
+                        hx-target="#main-content"
+                        hx-push-url="true"
+                        class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    View Details
+                </button>
+                
+                <!-- Create Milestone -->
+                <button hx-get="/modals/create-milestone?epic_id={{ epic.id }}"
+                        hx-target="#modal-container"
+                        class="text-green-600 hover:text-green-800 text-sm font-medium">
+                    Add Milestone
+                </button>
+            </div>
+            
+            <!-- Quick Status Update -->
+            <div class="relative" x-data="{ open: false }">
+                <button @click="open = !open" 
+                        class="text-gray-400 hover:text-gray-600 p-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                    </svg>
+                </button>
+                
+                <div x-show="open" 
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="transform opacity-0 scale-95"
+                     x-transition:enter-end="transform opacity-100 scale-100"
+                     @click.away="open = false"
+                     class="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+                    <div class="py-1">
+                        <button hx-put="/htmx/epics/{{ epic.id }}/status"
+                                hx-vals='{"status": "active"}'
+                                hx-target="closest .bg-white"
+                                @click="open = false"
+                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            Mark Active
+                        </button>
+                        <button hx-put="/htmx/epics/{{ epic.id }}/status"
+                                hx-vals='{"status": "completed"}'
+                                hx-target="closest .bg-white"
+                                @click="open = false"
+                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            Mark Complete
+                        </button>
+                        <button hx-put="/htmx/epics/{{ epic.id }}/status"
+                                hx-vals='{"status": "on_hold"}'
+                                hx-target="closest .bg-white"
+                                @click="open = false"
+                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            Put On Hold
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-span-full text-center py-12">
+        <div class="text-gray-400 mb-4">
+            <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" 
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No epics found</h3>
+        <p class="text-gray-500 mb-4">Get started by creating your first epic to organize features and initiatives.</p>
+        <button hx-get="/modals/create-epic"
+                hx-target="#modal-container"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+            <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Create Epic
+        </button>
+    </div>
+    {% endfor %}
+</div>

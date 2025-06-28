@@ -17,11 +17,19 @@ from sqlalchemy.orm import Session
 
 from .database import get_db, init_database
 from .models import Goal, GoalProject, Project, Task
+from .models.epics import Epic
 # Import extended models to ensure they are registered
 from .models.extended import Issue, Reminder, TaskComment, TaskAttachment, ProjectContext, ScheduleEvent  # noqa: F401
 from .routers import goals_router, projects_router, tasks_router
-from .routers.htmx_projects import router as htmx_projects_router
+from .routers.epics import router as epics_router
+from .routers.milestones import router as milestones_router
+from .routers.issues import router as issues_router
+from .routers.htmx_projects_simple import router as htmx_projects_router
 from .routers.htmx_tasks import router as htmx_tasks_router
+from .routers.htmx_epics import router as htmx_epics_router
+from .routers.htmx_milestones import router as htmx_milestones_router
+from .routers.htmx_goals import router as htmx_goals_router
+from .routers.htmx_goals import router as htmx_goals_router
 
 # Create FastAPI application
 app = FastAPI(
@@ -47,10 +55,17 @@ templates = Jinja2Templates(directory=templates_dir)
 app.include_router(projects_router)
 app.include_router(tasks_router)
 app.include_router(goals_router)
+app.include_router(epics_router)
+app.include_router(milestones_router)
+app.include_router(issues_router)
 
 # Include HTMX routers
 app.include_router(htmx_projects_router)
 app.include_router(htmx_tasks_router)
+app.include_router(htmx_epics_router)
+app.include_router(htmx_milestones_router)
+app.include_router(htmx_goals_router)
+app.include_router(htmx_goals_router)
 
 
 
@@ -65,12 +80,13 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database on startup"""
+    """Database startup event"""
     try:
-        init_database()
-        print("✅ Database initialized successfully")
+        # Database is already initialized with correct schema
+        # Do not call init_database() to avoid overriding the schema
+        print("✅ Using existing database with correct schema")
     except Exception as e:
-        print(f"❌ Database initialization failed: {e}")
+        print(f"❌ Database startup failed: {e}")
 
 
 # Helper function to detect HTMX requests
@@ -170,6 +186,33 @@ async def create_task_modal(
         "parent_task_id": parent_task_id,
     }
     return templates.TemplateResponse("modals/create_task.html", context)
+
+
+@app.get("/modals/create-milestone", response_class=HTMLResponse)
+async def create_milestone_modal(
+    request: Request,
+    epic_id: str = None,
+    project_id: str = None,
+    db: Session = Depends(get_db),
+):
+    """Create milestone modal"""
+    # Get available epics
+    query = db.query(Epic)
+    if project_id:
+        query = query.filter(Epic.project_id == project_id)
+    epics = query.all()
+    
+    # Get available projects
+    projects = db.query(Project).all()
+    
+    context = {
+        "request": request,
+        "epics": epics,
+        "projects": projects,
+        "selected_epic_id": epic_id,
+        "selected_project_id": project_id,
+    }
+    return templates.TemplateResponse("modals/create_milestone.html", context)
 
 
 @app.get("/modals/create-goal", response_class=HTMLResponse)
@@ -464,6 +507,43 @@ async def goals_page(request: Request, db: Session = Depends(get_db)):
         return templates.TemplateResponse("fragments/goals_content.html", context)
     else:
         return templates.TemplateResponse("goals.html", context)
+
+
+# Epics page
+@app.get("/epics", response_class=HTMLResponse)
+async def epics_page(request: Request, db: Session = Depends(get_db)):
+    """Epics management page"""
+    epics = db.query(Epic).order_by(Epic.updated_at.desc()).all()
+    projects = db.query(Project).all()
+
+    context = {"request": request, "epics": epics, "projects": projects}
+
+    # Return content fragment for HTMX requests, full page otherwise
+    if is_htmx_request(request):
+        return templates.TemplateResponse("fragments/epics_content.html", context)
+    else:
+        return templates.TemplateResponse("epics/list.html", context)
+
+
+@app.get("/modals/create-epic", response_class=HTMLResponse)
+async def create_epic_modal(request: Request, db: Session = Depends(get_db)):
+    """Create epic modal"""
+    projects = db.query(Project).filter(Project.status == "active").all()
+    context = {"request": request, "projects": projects}
+    return templates.TemplateResponse("modals/create_epic.html", context)
+
+
+# Milestones page
+@app.get("/milestones", response_class=HTMLResponse)
+async def milestones_page(request: Request, db: Session = Depends(get_db)):
+    """Milestones management page"""
+    context = {"request": request}
+
+    # Return content fragment for HTMX requests, full page otherwise
+    if is_htmx_request(request):
+        return templates.TemplateResponse("fragments/milestones_content.html", context)
+    else:
+        return templates.TemplateResponse("milestones/list.html", context)
 
 
 # Analytics page
