@@ -11,11 +11,12 @@ from sqlalchemy.pool import StaticPool
 
 # Import all models to ensure they are registered with SQLAlchemy
 from .models import Base, Project, Task, Goal, TaskDependency, GoalProject, Sprint, SprintTask
+from .models.epics import Epic, Milestone  # Import Epic and Milestone models
 from .models.extended import Issue, Reminder, TaskComment, TaskAttachment, ProjectContext, ScheduleEvent  # noqa: F401
 
 # Ensure all models are registered (prevents F401 warnings)
 __all__ = ["Base", "Project", "Task", "Goal", "TaskDependency", "GoalProject", "Sprint", "SprintTask",
-           "Issue", "Reminder", "TaskComment", "TaskAttachment", "ProjectContext", "ScheduleEvent"]
+           "Epic", "Milestone", "Issue", "Reminder", "TaskComment", "TaskAttachment", "ProjectContext", "ScheduleEvent"]
 
 
 class DatabaseManager:
@@ -23,8 +24,8 @@ class DatabaseManager:
 
     def __init__(self, database_url: str = None):
         if database_url is None:
-            # Default to SQLite in project root
-            db_path = Path(__file__).parent.parent.parent.parent / "goalpath.db"
+            # Default to SQLite in project root (goal-path folder)
+            db_path = Path(__file__).parent.parent.parent / "goalpath.db"
             database_url = f"sqlite:///{db_path}"
 
         self.database_url = database_url

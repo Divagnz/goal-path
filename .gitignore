@@ -238,3 +238,10 @@ node_modules/
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Claude Code files
+CLAUDE.md
+.claude_history
+
+# MCP configuration with sensitive data
+.mcp.json

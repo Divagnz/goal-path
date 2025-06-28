@@ -3,6 +3,7 @@ Additional SQLAlchemy models for GoalPath - Part 2
 Reminders, Issues, Comments, Context, and other supporting entities
 """
 
+from enum import Enum
 from sqlalchemy import (
     BigInteger,
     CheckConstraint,
@@ -17,6 +18,22 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from . import Base, generate_uuid
+
+
+class IssueStatus(str, Enum):
+    TRIAGE = "triage"
+    BACKLOG = "backlog"
+    IN_PROGRESS = "in_progress"
+    RESOLVED = "resolved"
+    CLOSED = "closed"
+    PROMOTED = "promoted"
+
+
+class IssueType(str, Enum):
+    BUG = "bug"
+    FEATURE = "feature"
+    ENHANCEMENT = "enhancement"
+    QUESTION = "question"
 
 
 class Reminder(Base):
@@ -66,7 +83,7 @@ class Issue(Base):
     description = Column(Text)
     issue_type = Column(String(20), nullable=False, default="feature")
     priority = Column(String(20), nullable=False, default="medium")
-    status = Column(String(20), nullable=False, default="triage")
+    status = Column(String(20), nullable=False, default=IssueStatus.TRIAGE)
     reporter = Column(String(100), nullable=False)
     assignee = Column(String(100))
     promoted_to_task_id = Column(String, ForeignKey("tasks.id", ondelete="SET NULL"))
@@ -86,7 +103,7 @@ class Issue(Base):
             "priority IN ('low', 'medium', 'high', 'critical')", name="chk_issue_priority"
         ),
         CheckConstraint(
-            "status IN ('triage', 'backlog', 'in_progress', 'resolved', 'closed')",
+            "status IN ('triage', 'backlog', 'in_progress', 'resolved', 'closed', 'promoted')",
             name="chk_issue_status",
         ),
     )
@@ -199,6 +216,8 @@ class ScheduleEvent(Base):
 __all__ = [
     "Reminder",
     "Issue",
+    "IssueStatus",
+    "IssueType",
     "TaskComment",
     "TaskAttachment",
     "ProjectContext",

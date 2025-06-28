@@ -1,0 +1,140 @@
+<!-- Milestone Edit Form Fragment -->
+<div class="bg-white rounded-lg shadow-sm border p-6" id="milestone-{{ milestone.id }}">
+    <form hx-put="/htmx/milestones/{{ milestone.id }}/edit"
+          hx-target="#milestone-{{ milestone.id }}"
+          hx-swap="outerHTML"
+          class="space-y-4">
+        
+        <!-- Form Header -->
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Edit Milestone</h3>
+            <button type="button"
+                    hx-get="/htmx/milestones/{{ milestone.id }}"
+                    hx-target="#milestone-{{ milestone.id }}"
+                    hx-swap="outerHTML"
+                    class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Title -->
+        <div>
+            <label for="edit-milestone-title-{{ milestone.id }}" class="block text-sm font-medium text-gray-700 mb-2">
+                Title *
+            </label>
+            <input type="text" 
+                   id="edit-milestone-title-{{ milestone.id }}" 
+                   name="title"
+                   value="{{ milestone.title }}"
+                   required
+                   maxlength="255"
+                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+        </div>
+        
+        <!-- Description -->
+        <div>
+            <label for="edit-milestone-description-{{ milestone.id }}" class="block text-sm font-medium text-gray-700 mb-2">
+                Description
+            </label>
+            <textarea id="edit-milestone-description-{{ milestone.id }}" 
+                      name="description"
+                      rows="3"
+                      class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">{{ milestone.description or '' }}</textarea>
+        </div>
+        
+        <!-- Epic Selection -->
+        <div>
+            <label for="edit-milestone-epic-{{ milestone.id }}" class="block text-sm font-medium text-gray-700 mb-2">
+                Epic *
+            </label>
+            <select id="edit-milestone-epic-{{ milestone.id }}" 
+                    name="epic_id"
+                    required
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                {% for epic in epics %}
+                <option value="{{ epic.id }}" 
+                        {% if milestone.epic_id == epic.id %}selected{% endif %}>
+                    {{ epic.title }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Due Date -->
+        <div>
+            <label for="edit-milestone-due-date-{{ milestone.id }}" class="block text-sm font-medium text-gray-700 mb-2">
+                Due Date
+            </label>
+            <input type="date" 
+                   id="edit-milestone-due-date-{{ milestone.id }}" 
+                   name="due_date"
+                   value="{{ milestone.due_date.isoformat() if milestone.due_date else '' }}"
+                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+        </div>
+        
+        <!-- Status -->
+        <div>
+            <label for="edit-milestone-status-{{ milestone.id }}" class="block text-sm font-medium text-gray-700 mb-2">
+                Status
+            </label>
+            <select id="edit-milestone-status-{{ milestone.id }}" 
+                    name="status"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <option value="planned" {% if milestone.status == 'planned' %}selected{% endif %}>Planned</option>
+                <option value="active" {% if milestone.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="completed" {% if milestone.status == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="cancelled" {% if milestone.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                <option value="delayed" {% if milestone.status == 'delayed' %}selected{% endif %}>Delayed</option>
+            </select>
+        </div>
+        
+        <!-- Progress -->
+        <div>
+            <label for="edit-milestone-progress-{{ milestone.id }}" class="block text-sm font-medium text-gray-700 mb-2">
+                Progress (%)
+            </label>
+            <div class="flex items-center space-x-3">
+                <input type="range" 
+                       id="edit-milestone-progress-{{ milestone.id }}" 
+                       name="progress_percentage"
+                       min="0" 
+                       max="100" 
+                       value="{{ milestone.progress_percentage }}"
+                       class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                       oninput="document.getElementById('edit-progress-value-{{ milestone.id }}').textContent = this.value + '%'">
+                <span id="edit-progress-value-{{ milestone.id }}" class="text-sm font-medium text-gray-700 min-w-12">{{ "%.0f"|format(milestone.progress_percentage) }}%</span>
+            </div>
+        </div>
+        
+        <!-- Order Index -->
+        <div>
+            <label for="edit-milestone-order-{{ milestone.id }}" class="block text-sm font-medium text-gray-700 mb-2">
+                Order Index
+            </label>
+            <input type="number" 
+                   id="edit-milestone-order-{{ milestone.id }}" 
+                   name="order_index"
+                   min="0"
+                   value="{{ milestone.order_index }}"
+                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            <p class="text-xs text-gray-500 mt-1">Lower numbers appear first in lists</p>
+        </div>
+        
+        <!-- Form Actions -->
+        <div class="flex justify-end space-x-3 pt-4 border-t">
+            <button type="button"
+                    hx-get="/htmx/milestones/{{ milestone.id }}"
+                    hx-target="#milestone-{{ milestone.id }}"
+                    hx-swap="outerHTML"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200">
+                Cancel
+            </button>
+            <button type="submit"
+                    class="px-4 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200">
+                Update Milestone
+            </button>
+        </div>
+    </form>
+</div>

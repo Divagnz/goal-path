@@ -231,6 +231,20 @@
                        hx-push-url="true">
                         Projects
                     </a>
+                    <a href="/epics" 
+                       class="nav-link text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md text-sm font-medium transition-all"
+                       hx-get="/epics" 
+                       hx-target="#main-content" 
+                       hx-push-url="true">
+                        Epics
+                    </a>
+                    <a href="/milestones" 
+                       class="nav-link text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md text-sm font-medium transition-all"
+                       hx-get="/milestones" 
+                       hx-target="#main-content" 
+                       hx-push-url="true">
+                        Milestones
+                    </a>
                     <a href="/tasks" 
                        class="nav-link text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md text-sm font-medium transition-all"
                        hx-get="/tasks" 
@@ -283,6 +297,18 @@
                                         class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     📋 New Project
                                 </button>
+                                <button hx-get="/modals/create-epic" 
+                                        hx-target="#modal-container"
+                                        @click="open = false"
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    🚀 New Epic
+                                </button>
+                                <button hx-get="/modals/create-milestone" 
+                                        hx-target="#modal-container"
+                                        @click="open = false"
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    🎯 New Milestone
+                                </button>
                                 <button hx-get="/modals/create-task" 
                                         hx-target="#modal-container"
                                         @click="open = false"
@@ -293,7 +319,7 @@
                                         hx-target="#modal-container"
                                         @click="open = false"
                                         class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    🎯 New Goal
+                                    🏆 New Goal
                                 </button>
                             </div>
                         </div>
@@ -369,6 +395,20 @@
                hx-push-url="true"
                class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md">
                 Projects
+            </a>
+            <a href="/epics" @click="sidebarOpen = false"
+               hx-get="/epics" 
+               hx-target="#main-content" 
+               hx-push-url="true"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                Epics
+            </a>
+            <a href="/milestones" @click="sidebarOpen = false"
+               hx-get="/milestones" 
+               hx-target="#main-content" 
+               hx-push-url="true"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                Milestones
             </a>
             <a href="/tasks" @click="sidebarOpen = false"
                hx-get="/tasks" 
